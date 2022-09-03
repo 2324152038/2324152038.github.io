@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="转载文章 https:&#x2F;&#x2F;github.com&#x2F;CyC2018&#x2F;CS-Notes&#x2F;blob&#x2F;master&#x2F;notes&#x2F;%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md 网络的网络网络把主机连接起来，而互连网（internet）是把多种不同的网络连接起来，因此互连网是网络的网络。而互联网（Interne">
+<meta property="og:type" content="article">
+<meta property="og:title" content="概述">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/03/%E6%A6%82%E8%BF%B0/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="转载文章 https:&#x2F;&#x2F;github.com&#x2F;CyC2018&#x2F;CS-Notes&#x2F;blob&#x2F;master&#x2F;notes&#x2F;%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md 网络的网络网络把主机连接起来，而互连网（internet）是把多种不同的网络连接起来，因此互连网是网络的网络。而互联网（Interne">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966">
+<meta property="og:image" content="https://camo.githubusercontent.com/06e0f91855cd98db279cd8bf27785ec819e525690c61b646497b1da76d05bea3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37326265303163642d343161652d343566372d393962392d6138643238346534346464342e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/b6d96160cefcb96d6adc7787ac9266bb3adcb346b5c785fe0dfcc899c961c6d5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33626534323630312d396433332d346432392d383335382d6139643136343533616639332e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/c399fea325b01cf994fff43d033ea08352708c4988ced7938c008bea1ec42a3c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313438393463322d306263342d343662352d626566392d3033313661363965663532312e6a7067">
+<meta property="og:image" content="https://camo.githubusercontent.com/1ce82a88a4c4c6b6125484c6ab4f5587e2e390c49392aa9309ba7e0bc1514466/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34323433306539342d333133372d343863302d626462362d3363656261663931303265332e6a7067">
+<meta property="og:image" content="https://camo.githubusercontent.com/0a962523171ffa6b3b517823ab985c378b1acf07cd439aec5e9b535b6351efce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34623261653738632d653235342d343464662d396533372d3537386532663262656635322e6a7067">
+<meta property="og:image" content="https://camo.githubusercontent.com/c7aba1e9d6b3102633359b875555573794643242359c985d66e9d0b7c94ae766/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64636462623936632d393037372d343132312d616562382d3734336535346163303261342e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/c9de58438de83509f26f14b6dbab912917d677287c10ec56e26572bbd5527de9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61313631366461632d306531322d343062322d383237642d3965336637663062393430642e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/bbe716e11ca979af077d83837c9524453a22219919f65aa791aedacfdbfc7e5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30666136633233372d613930392d346532612d613737312d3263353438356364386365302e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/dfd049aa29f5c514450e4a687bb793b6517025da576dde3aabc1f51edb3dda90/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34386437396265382d303835622d343836322d386139642d3138343032656239336233312e706e67">
+<meta property="article:published_time" content="2022-09-03T05:30:51.000Z">
+<meta property="article:modified_time" content="2022-09-03T05:37:35.876Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/03/%E6%A6%82%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>概述 | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/03/%E6%A6%82%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          概述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-03 13:30:51 / 修改时间：13:37:35" itemprop="dateCreated datePublished" datetime="2022-09-03T13:30:51+08:00">2022-09-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><u>转载文章</u></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md">https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md</a></p>
+<h2 id="网络的网络"><a href="#网络的网络" class="headerlink" title="网络的网络"></a>网络的网络</h2><p>网络把主机连接起来，而互连网（internet）是把多种不同的网络连接起来，因此互连网是网络的网络。而互联网（Internet）是全球范围的互连网。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966"><img src="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966" alt="img"></a></p>
+<h2 id="ISP"><a href="#ISP" class="headerlink" title="ISP"></a>ISP</h2><p>互联网服务提供商 ISP 可以从互联网管理机构获得许多 IP 地址，同时拥有通信线路以及路由器等联网设备，个人或机构向 ISP 缴纳一定的费用就可以接入互联网。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/06e0f91855cd98db279cd8bf27785ec819e525690c61b646497b1da76d05bea3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37326265303163642d343161652d343566372d393962392d6138643238346534346464342e706e67"><img src="https://camo.githubusercontent.com/06e0f91855cd98db279cd8bf27785ec819e525690c61b646497b1da76d05bea3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37326265303163642d343161652d343566372d393962392d6138643238346534346464342e706e67" alt="img"></a></p>
+<p>目前的互联网是一种多层次 ISP 结构，ISP 根据覆盖面积的大小分为第一层 ISP、区域 ISP 和接入 ISP。互联网交换点 IXP 允许两个 ISP 直接相连而不用经过第三个 ISP。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/b6d96160cefcb96d6adc7787ac9266bb3adcb346b5c785fe0dfcc899c961c6d5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33626534323630312d396433332d346432392d383335382d6139643136343533616639332e706e67"><img src="https://camo.githubusercontent.com/b6d96160cefcb96d6adc7787ac9266bb3adcb346b5c785fe0dfcc899c961c6d5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33626534323630312d396433332d346432392d383335382d6139643136343533616639332e706e67" alt="img"></a></p>
+<h2 id="主机之间的通信方式"><a href="#主机之间的通信方式" class="headerlink" title="主机之间的通信方式"></a>主机之间的通信方式</h2><ul>
+<li>客户-服务器（C&#x2F;S）：客户是服务的请求方，服务器是服务的提供方。</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c399fea325b01cf994fff43d033ea08352708c4988ced7938c008bea1ec42a3c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313438393463322d306263342d343662352d626566392d3033313661363965663532312e6a7067"><img src="https://camo.githubusercontent.com/c399fea325b01cf994fff43d033ea08352708c4988ced7938c008bea1ec42a3c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313438393463322d306263342d343662352d626566392d3033313661363965663532312e6a7067" alt="img"></a></p>
+<ul>
+<li>对等（P2P）：不区分客户和服务器。</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/1ce82a88a4c4c6b6125484c6ab4f5587e2e390c49392aa9309ba7e0bc1514466/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34323433306539342d333133372d343863302d626462362d3363656261663931303265332e6a7067"><img src="https://camo.githubusercontent.com/1ce82a88a4c4c6b6125484c6ab4f5587e2e390c49392aa9309ba7e0bc1514466/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34323433306539342d333133372d343863302d626462362d3363656261663931303265332e6a7067" alt="img"></a></p>
+<h2 id="电路交换与分组交换"><a href="#电路交换与分组交换" class="headerlink" title="电路交换与分组交换"></a>电路交换与分组交换</h2><h3 id="1-电路交换"><a href="#1-电路交换" class="headerlink" title="1. 电路交换"></a>1. 电路交换</h3><p>电路交换用于电话通信系统，两个用户要通信之前需要建立一条专用的物理链路，并且在整个通信过程中始终占用该链路。由于通信的过程中不可能一直在使用传输线路，因此电路交换对线路的利用率很低，往往不到 10%。</p>
+<h3 id="2-分组交换"><a href="#2-分组交换" class="headerlink" title="2. 分组交换"></a>2. 分组交换</h3><p>每个分组都有首部和尾部，包含了源地址和目的地址等控制信息，在同一个传输线路上同时传输多个分组互相不会影响，因此在同一条传输线路上允许同时传输多个分组，也就是说分组交换不需要占用传输线路。</p>
+<p>在一个邮局通信系统中，邮局收到一份邮件之后，先存储下来，然后把相同目的地的邮件一起转发到下一个目的地，这个过程就是存储转发过程，分组交换也使用了存储转发过程。</p>
+<h2 id="时延"><a href="#时延" class="headerlink" title="时延"></a>时延</h2><p>总时延 &#x3D; 排队时延 + 处理时延 + 传输时延 + 传播时延</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/0a962523171ffa6b3b517823ab985c378b1acf07cd439aec5e9b535b6351efce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34623261653738632d653235342d343464662d396533372d3537386532663262656635322e6a7067"><img src="https://camo.githubusercontent.com/0a962523171ffa6b3b517823ab985c378b1acf07cd439aec5e9b535b6351efce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34623261653738632d653235342d343464662d396533372d3537386532663262656635322e6a7067" alt="img"></a></p>
+<h3 id="1-排队时延"><a href="#1-排队时延" class="headerlink" title="1. 排队时延"></a>1. 排队时延</h3><p>分组在路由器的输入队列和输出队列中排队等待的时间，取决于网络当前的通信量。</p>
+<h3 id="2-处理时延"><a href="#2-处理时延" class="headerlink" title="2. 处理时延"></a>2. 处理时延</h3><p>主机或路由器收到分组时进行处理所需要的时间，例如分析首部、从分组中提取数据、进行差错检验或查找适当的路由等。</p>
+<h3 id="3-传输时延"><a href="#3-传输时延" class="headerlink" title="3. 传输时延"></a>3. 传输时延</h3><p>主机或路由器传输数据帧所需要的时间。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c7aba1e9d6b3102633359b875555573794643242359c985d66e9d0b7c94ae766/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64636462623936632d393037372d343132312d616562382d3734336535346163303261342e706e67"><img src="https://camo.githubusercontent.com/c7aba1e9d6b3102633359b875555573794643242359c985d66e9d0b7c94ae766/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64636462623936632d393037372d343132312d616562382d3734336535346163303261342e706e67" alt="img"></a></p>
+<p>其中 l 表示数据帧的长度，v 表示传输速率。</p>
+<h3 id="4-传播时延"><a href="#4-传播时延" class="headerlink" title="4. 传播时延"></a>4. 传播时延</h3><p>电磁波在信道中传播所需要花费的时间，电磁波传播的速度接近光速。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c9de58438de83509f26f14b6dbab912917d677287c10ec56e26572bbd5527de9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61313631366461632d306531322d343062322d383237642d3965336637663062393430642e706e67"><img src="https://camo.githubusercontent.com/c9de58438de83509f26f14b6dbab912917d677287c10ec56e26572bbd5527de9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61313631366461632d306531322d343062322d383237642d3965336637663062393430642e706e67" alt="img"></a></p>
+<p>其中 l 表示信道长度，v 表示电磁波在信道上的传播速度。</p>
+<h2 id="计算机网络体系结构"><a href="#计算机网络体系结构" class="headerlink" title="计算机网络体系结构"></a>计算机网络体系结构</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/bbe716e11ca979af077d83837c9524453a22219919f65aa791aedacfdbfc7e5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30666136633233372d613930392d346532612d613737312d3263353438356364386365302e706e67"><img src="https://camo.githubusercontent.com/bbe716e11ca979af077d83837c9524453a22219919f65aa791aedacfdbfc7e5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30666136633233372d613930392d346532612d613737312d3263353438356364386365302e706e67" alt="img"></a></p>
+<h3 id="1-五层协议"><a href="#1-五层协议" class="headerlink" title="1. 五层协议"></a>1. 五层协议</h3><ul>
+<li><strong>应用层</strong> ：为特定应用程序提供数据传输服务，例如 HTTP、DNS 等协议。数据单位为报文。</li>
+<li><strong>传输层</strong> ：为进程提供通用数据传输服务。由于应用层协议很多，定义通用的传输层协议就可以支持不断增多的应用层协议。运输层包括两种协议：传输控制协议 TCP，提供面向连接、可靠的数据传输服务，数据单位为报文段；用户数据报协议 UDP，提供无连接、尽最大努力的数据传输服务，数据单位为用户数据报。TCP 主要提供完整性服务，UDP 主要提供及时性服务。</li>
+<li><strong>网络层</strong> ：为主机提供数据传输服务。而传输层协议是为主机中的进程提供数据传输服务。网络层把传输层传递下来的报文段或者用户数据报封装成分组。</li>
+<li><strong>数据链路层</strong> ：网络层针对的还是主机之间的数据传输服务，而主机之间可以有很多链路，链路层协议就是为同一链路的主机提供数据传输服务。数据链路层把网络层传下来的分组封装成帧。</li>
+<li><strong>物理层</strong> ：考虑的是怎样在传输媒体上传输数据比特流，而不是指具体的传输媒体。物理层的作用是尽可能屏蔽传输媒体和通信手段的差异，使数据链路层感觉不到这些差异。</li>
+</ul>
+<h3 id="2-OSI"><a href="#2-OSI" class="headerlink" title="2. OSI"></a>2. OSI</h3><p>其中表示层和会话层用途如下：</p>
+<ul>
+<li><strong>表示层</strong> ：数据压缩、加密以及数据描述，这使得应用程序不必关心在各台主机中数据内部格式不同的问题。</li>
+<li><strong>会话层</strong> ：建立及管理会话。</li>
+</ul>
+<p>五层协议没有表示层和会话层，而是将这些功能留给应用程序开发者处理。</p>
+<h3 id="3-TCP-x2F-IP"><a href="#3-TCP-x2F-IP" class="headerlink" title="3. TCP&#x2F;IP"></a>3. TCP&#x2F;IP</h3><p>它只有四层，相当于五层协议中数据链路层和物理层合并为网络接口层。</p>
+<p>TCP&#x2F;IP 体系结构不严格遵循 OSI 分层概念，应用层可能会直接使用 IP 层或者网络接口层。</p>
+<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/dfd049aa29f5c514450e4a687bb793b6517025da576dde3aabc1f51edb3dda90/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34386437396265382d303835622d343836322d386139642d3138343032656239336233312e706e67"><img src="https://camo.githubusercontent.com/dfd049aa29f5c514450e4a687bb793b6517025da576dde3aabc1f51edb3dda90/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34386437396265382d303835622d343836322d386139642d3138343032656239336233312e706e67" alt="img"></a></p>
+<h3 id="4-数据在各层之间的传递过程"><a href="#4-数据在各层之间的传递过程" class="headerlink" title="4. 数据在各层之间的传递过程"></a>4. 数据在各层之间的传递过程</h3><p>在向下的过程中，需要添加下层协议所需要的首部或者尾部，而在向上的过程中不断拆开首部和尾部。</p>
+<p>路由器只有下面三层协议，因为路由器位于网络核心中，不需要为进程或者应用程序提供服务，因此也就不需要传输层和应用层。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/02/%E5%BC%B1%E5%8F%A3%E4%BB%A4%E6%89%AB%E6%8F%8F%E5%99%A8/" rel="prev" title="弱口令扫描器">
+      <i class="fa fa-chevron-left"></i> 弱口令扫描器
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E7%9A%84%E7%BD%91%E7%BB%9C"><span class="nav-number">1.</span> <span class="nav-text">网络的网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ISP"><span class="nav-number">2.</span> <span class="nav-text">ISP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E6%9C%BA%E4%B9%8B%E9%97%B4%E7%9A%84%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">主机之间的通信方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2%E4%B8%8E%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2"><span class="nav-number">4.</span> <span class="nav-text">电路交换与分组交换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%94%B5%E8%B7%AF%E4%BA%A4%E6%8D%A2"><span class="nav-number">4.1.</span> <span class="nav-text">1. 电路交换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%88%86%E7%BB%84%E4%BA%A4%E6%8D%A2"><span class="nav-number">4.2.</span> <span class="nav-text">2. 分组交换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%B6%E5%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">时延</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8E%92%E9%98%9F%E6%97%B6%E5%BB%B6"><span class="nav-number">5.1.</span> <span class="nav-text">1. 排队时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%A4%84%E7%90%86%E6%97%B6%E5%BB%B6"><span class="nav-number">5.2.</span> <span class="nav-text">2. 处理时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%BC%A0%E8%BE%93%E6%97%B6%E5%BB%B6"><span class="nav-number">5.3.</span> <span class="nav-text">3. 传输时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%BC%A0%E6%92%AD%E6%97%B6%E5%BB%B6"><span class="nav-number">5.4.</span> <span class="nav-text">4. 传播时延</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">6.</span> <span class="nav-text">计算机网络体系结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%BA%94%E5%B1%82%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.1.</span> <span class="nav-text">1. 五层协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-OSI"><span class="nav-number">6.2.</span> <span class="nav-text">2. OSI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-TCP-x2F-IP"><span class="nav-number">6.3.</span> <span class="nav-text">3. TCP&#x2F;IP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E5%9C%A8%E5%90%84%E5%B1%82%E4%B9%8B%E9%97%B4%E7%9A%84%E4%BC%A0%E9%80%92%E8%BF%87%E7%A8%8B"><span class="nav-number">6.4.</span> <span class="nav-text">4. 数据在各层之间的传递过程</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
