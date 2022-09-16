@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="structGo 语言中，也和 C 或者其他语言一样，我们可以声明新的类型，作为其它类型的属性或字段的容器。例如，我们可以创建一个自定义类型 person 代表一个人的实体。这个实体拥有属性：姓名和年龄。这样的类型我们称之 struct。如下代码所示: 1234type person struct &amp;#123;    name string    age int&amp;#125;  如何使用 struc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="3.struct和面向对象">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/16/3.struct%E5%92%8C%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="structGo 语言中，也和 C 或者其他语言一样，我们可以声明新的类型，作为其它类型的属性或字段的容器。例如，我们可以创建一个自定义类型 person 代表一个人的实体。这个实体拥有属性：姓名和年龄。这样的类型我们称之 struct。如下代码所示: 1234type person struct &amp;#123;    name string    age int&amp;#125;  如何使用 struc">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-16T00:15:17.000Z">
+<meta property="article:modified_time" content="2022-09-16T00:37:14.102Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/16/3.struct%E5%92%8C%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>3.struct和面向对象 | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/16/3.struct%E5%92%8C%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          3.struct和面向对象
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 08:15:17 / 修改时间：08:37:14" itemprop="dateCreated datePublished" datetime="2022-09-16T08:15:17+08:00">2022-09-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h1><p>Go 语言中，也和 C 或者其他语言一样，我们可以声明新的类型，作为其它类型的属性或字段的容器。例如，我们可以创建一个自定义类型 person 代表一个人的实体。这个实体拥有属性：姓名和年龄。这样的类型我们称之 struct。如下代码所示:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如何使用 struct 呢？请看下面的代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> P person  <span class="comment">// P 现在就是 person 类型的变量了</span></span><br><span class="line"></span><br><span class="line">P.name = <span class="string">&quot;Astaxie&quot;</span>  <span class="comment">// 赋值 &quot;Astaxie&quot; 给 P 的 name 属性.</span></span><br><span class="line">P.age = <span class="number">25</span>  <span class="comment">// 赋值 &quot;25&quot; 给变量 P 的 age 属性</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;The person&#x27;s name is %s&quot;</span>, P.name)  <span class="comment">// 访问 P 的 name 属性.</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="struct-的匿名字段"><a href="#struct-的匿名字段" class="headerlink" title="struct 的匿名字段"></a>struct 的匿名字段</h1><p>我们上面介绍了如何定义一个 struct，定义的时候是字段名与其类型一一对应，实际上 Go 支持只提供类型，而不写字段名的方式，也就是匿名字段，也称为嵌入字段。</p>
+<p>当匿名字段是一个 struct 的时候，那么这个 struct 所拥有的全部字段都被隐式地引入了当前定义的这个 struct。</p>
+<p>让我们来看一个例子，让上面说的这些更具体化</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    weight <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human  <span class="comment">// 匿名字段，那么默认 Student 就包含了 Human 的所有字段</span></span><br><span class="line">    speciality <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 我们初始化一个学生</span></span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="number">120</span>&#125;, <span class="string">&quot;Computer Science&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 我们访问相应的字段</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His name is &quot;</span>, mark.name)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His age is &quot;</span>, mark.age)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His weight is &quot;</span>, mark.weight)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His speciality is &quot;</span>, mark.speciality)</span><br><span class="line">    <span class="comment">// 修改对应的备注信息</span></span><br><span class="line">    mark.speciality = <span class="string">&quot;AI&quot;</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark changed his speciality&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His speciality is &quot;</span>, mark.speciality)</span><br><span class="line">    <span class="comment">// 修改他的年龄信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark become old&quot;</span>)</span><br><span class="line">    mark.age = <span class="number">46</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His age is&quot;</span>, mark.age)</span><br><span class="line">    <span class="comment">// 修改他的体重信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark is not an athlet anymore&quot;</span>)</span><br><span class="line">    mark.weight += <span class="number">60</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His weight is&quot;</span>, mark.weight)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个问题：如果 human 里面有一个字段叫做 phone，而 student 也有一个字段叫做 phone，那么该怎么办呢？</p>
+<p>Go 里面很简单的解决了这个问题，最外层的优先访问，也就是当你通过 student.phone 访问的时候，是访问 student 里面的字段，而不是 human 里面的字段。</p>
+<p>这样就允许我们去重载通过匿名字段继承的一些字段，当然如果我们想访问重载后对应匿名类型里面的字段，可以通过匿名字段名来访问。请看下面的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span>  <span class="comment">// Human 类型拥有的字段</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human  <span class="comment">// 匿名字段 Human</span></span><br><span class="line">    speciality <span class="type">string</span></span><br><span class="line">    phone <span class="type">string</span>  <span class="comment">// 雇员的 phone 字段</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Bob := Employee&#123;Human&#123;<span class="string">&quot;Bob&quot;</span>, <span class="number">34</span>, <span class="string">&quot;777-444-XXXX&quot;</span>&#125;, <span class="string">&quot;Designer&quot;</span>, <span class="string">&quot;333-222&quot;</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Bob&#x27;s work phone is:&quot;</span>, Bob.phone)</span><br><span class="line">    <span class="comment">// 如果我们要访问 Human 的 phone 字段</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Bob&#x27;s personal phone is:&quot;</span>, Bob.Human.phone)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h1><p>你是否想过函数当作 struct 的字段一样来处理呢？今天我们就讲解一下函数的另一种形态，带有接收者的函数，我们称为 <code>method</code></p>
+<h2 id="method"><a href="#method" class="headerlink" title="method"></a>method</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r ReceiverType)</span></span> funcName(parameters) (results)</span><br></pre></td></tr></table></figure>
+
+<p>method 是附属在一个给定的类型上的，他的语法和函数的声明语法几乎一样，只是在 func 后面增加了一个 receiver (也就是 method 所依从的主体)。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;math&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Rectangle <span class="keyword">struct</span> &#123;</span><br><span class="line">    width, height <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Circle <span class="keyword">struct</span> &#123;</span><br><span class="line">    radius <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r Rectangle)</span></span> area() <span class="type">float64</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> r.width*r.height</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c Circle)</span></span> area() <span class="type">float64</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> c.radius * c.radius * math.Pi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    r1 := Rectangle&#123;<span class="number">12</span>, <span class="number">2</span>&#125;</span><br><span class="line">    r2 := Rectangle&#123;<span class="number">9</span>, <span class="number">4</span>&#125;</span><br><span class="line">    c1 := Circle&#123;<span class="number">10</span>&#125;</span><br><span class="line">    c2 := Circle&#123;<span class="number">25</span>&#125;</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of r1 is: &quot;</span>, r1.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of r2 is: &quot;</span>, r2.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of c1 is: &quot;</span>, c1.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of c2 is: &quot;</span>, c2.area())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在使用 method 的时候重要注意几点</p>
+<p>虽然 method 的名字一模一样，但是如果接收者不一样，那么 method 就不一样<br>method 里面可以访问接收者的字段<br>调用 method 通过 . 访问，就像 struct 里面访问字段一样</p>
+<p>在上例，method area () 分别属于 Rectangle 和 Circle， 于是他们的 Receiver 就变成了 Rectangle 和 Circle, 或者说，这个 area () 方法 是由 Rectangle&#x2F;Circle 发出的。</p>
+<h2 id="method-继承"><a href="#method-继承" class="headerlink" title="method 继承"></a>method 继承</h2><p>前面一章我们学习了字段的继承，那么你也会发现 Go 的一个神奇之处，method 也是可以继承的。如果匿名字段实现了一个 method，那么包含这个匿名字段的 struct 也能调用该 method。让我们来看下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在 human 上面定义了一个 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="string">&quot;222-222-YYYY&quot;</span>&#125;, <span class="string">&quot;MIT&quot;</span>&#125;</span><br><span class="line">    sam := Employee&#123;Human&#123;<span class="string">&quot;Sam&quot;</span>, <span class="number">45</span>, <span class="string">&quot;111-888-XXXX&quot;</span>&#125;, <span class="string">&quot;Golang Inc&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    mark.SayHi()</span><br><span class="line">    sam.SayHi()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="method-重写"><a href="#method-重写" class="headerlink" title="method 重写"></a>method 重写</h2><p>上面的例子中，如果 Employee 想要实现自己的 SayHi, 怎么办？简单，和匿名字段冲突一样的道理，我们可以在 Employee 上面定义一个 method，重写了匿名字段的方法。请看下面的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 定义 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Employee 的 method 重写 Human 的 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *Employee)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s, I work at %s. Call me on %s\n&quot;</span>, e.name,</span><br><span class="line">        e.company, e.phone) <span class="comment">//Yes you can split into 2 lines here.</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="string">&quot;222-222-YYYY&quot;</span>&#125;, <span class="string">&quot;MIT&quot;</span>&#125;</span><br><span class="line">    sam := Employee&#123;Human&#123;<span class="string">&quot;Sam&quot;</span>, <span class="number">45</span>, <span class="string">&quot;111-888-XXXX&quot;</span>&#125;, <span class="string">&quot;Golang Inc&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    mark.SayHi()</span><br><span class="line">    sam.SayHi()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/024-struct-type/3162">02.4. struct 类型 | 第二章. Go 语言基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/15/2.%E6%B5%81%E7%A8%8B%E5%92%8C%E5%87%BD%E6%95%B0/" rel="prev" title="2.流程和函数">
+      <i class="fa fa-chevron-left"></i> 2.流程和函数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/16/4.interface/" rel="next" title="4.interface">
+      4.interface <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#struct"><span class="nav-number">1.</span> <span class="nav-text">struct</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#struct-%E7%9A%84%E5%8C%BF%E5%90%8D%E5%AD%97%E6%AE%B5"><span class="nav-number">2.</span> <span class="nav-text">struct 的匿名字段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.</span> <span class="nav-text">面向对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#method"><span class="nav-number">3.1.</span> <span class="nav-text">method</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#method-%E7%BB%A7%E6%89%BF"><span class="nav-number">3.2.</span> <span class="nav-text">method 继承</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#method-%E9%87%8D%E5%86%99"><span class="nav-number">3.3.</span> <span class="nav-text">method 重写</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

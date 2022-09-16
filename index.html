@@ -157,6 +157,350 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/16/5.%E5%B9%B6%E5%8F%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/16/5.%E5%B9%B6%E5%8F%91/" class="post-title-link" itemprop="url">5.并发</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 10:32:38 / 修改时间：10:57:49" itemprop="dateCreated datePublished" datetime="2022-09-16T10:32:38+08:00">2022-09-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h1><p>有人把 Go 比作 21 世纪的 C 语言，第一是因为 Go 语言设计简单，第二，21 世纪最重要的就是并行程序设计，而 Go 从语言层面就支持了并行。</p>
+<h2 id="goroutine"><a href="#goroutine" class="headerlink" title="goroutine"></a>goroutine</h2><p>goroutine 是 Go 并行设计的核心。goroutine 说到底其实就是协程，但是它比线程更小，十几个 goroutine 可能体现在底层就是五六个线程，Go 语言内部帮你实现了这些 goroutine 之间的内存共享。执行 goroutine 只需极少的栈内存 (大概是 4~5 KB)，当然会根据相应的数据伸缩。也正因为如此，可同时运行成千上万个并发任务。goroutine 比 thread 更易用、更高效、更轻便。</p>
+<p>goroutine 是通过 Go 的 runtime 管理的一个线程管理器。goroutine 通过 go 关键字实现了，其实就是一个普通的函数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> hello(a, b, c)</span><br></pre></td></tr></table></figure>
+
+<p>通过关键字 go 就启动了一个 goroutine。我们来看一个例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;runtime&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">say</span><span class="params">(s <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">5</span>; i++ &#123;</span><br><span class="line">        runtime.Gosched()</span><br><span class="line">        fmt.Println(s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">go</span> say(<span class="string">&quot;world&quot;</span>) <span class="comment">// 开一个新的 Goroutines 执行</span></span><br><span class="line">    say(<span class="string">&quot;hello&quot;</span>) <span class="comment">// 当前 Goroutines 执行</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 以上程序执行后将输出：</span></span><br><span class="line"><span class="comment">// hello</span></span><br><span class="line"><span class="comment">// world</span></span><br><span class="line"><span class="comment">// hello</span></span><br><span class="line"><span class="comment">// world</span></span><br><span class="line"><span class="comment">// hello</span></span><br><span class="line"><span class="comment">// world</span></span><br><span class="line"><span class="comment">// hello</span></span><br><span class="line"><span class="comment">// world</span></span><br><span class="line"><span class="comment">// hello</span></span><br><span class="line"><span class="comment">// world</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 go 关键字很方便的就实现了并发编程。<br>上面的多个 goroutine 运行在同一个进程里面，共享内存数据，不过设计上我们要遵循：不要通过共享来通信，而要通过通信来共享。</p>
+<h2 id="channels"><a href="#channels" class="headerlink" title="channels"></a>channels</h2><p>goroutine 运行在相同的地址空间，因此访问共享内存必须做好同步。那么 goroutine 之间如何进行数据的通信呢，Go 提供了一个很好的通信机制 channel。channel 可以与 Unix shell 中的双向管道做类比：可以通过它发送或者接收值。这些值只能是特定的类型： channel 类型。定义一个 channel 时，也需要定义发送到 channel 的值的类型。注意，必须使用 make 创建 channel：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ci := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line">cf := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>channel 通过操作符 <code>&lt;-</code> 来接收和发送数据</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- v    <span class="comment">// 发送 v 到 channel ch.</span></span><br><span class="line">v := &lt;-ch  <span class="comment">// 从 ch 中接收数据，并赋值给v</span></span><br></pre></td></tr></table></figure>
+
+<p>我们把这些应用到我们的例子中来：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sum</span><span class="params">(a []<span class="type">int</span>, c <span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    total := <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> a &#123;</span><br><span class="line">        total += v</span><br><span class="line">    &#125;</span><br><span class="line">    c &lt;- total  <span class="comment">// send total to c</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := []<span class="type">int</span>&#123;<span class="number">7</span>, <span class="number">2</span>, <span class="number">8</span>, <span class="number">-9</span>, <span class="number">4</span>, <span class="number">0</span>&#125;</span><br><span class="line"></span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">    <span class="keyword">go</span> sum(a[:<span class="built_in">len</span>(a)/<span class="number">2</span>], c)</span><br><span class="line">    <span class="keyword">go</span> sum(a[<span class="built_in">len</span>(a)/<span class="number">2</span>:], c)</span><br><span class="line">    x, y := &lt;-c, &lt;-c  <span class="comment">// receive from c</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(x, y, x + y)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>默认情况下，channel 接收和发送数据都是阻塞的，除非另一端已经准备好，这样就使得 Goroutines 同步变的更加的简单，而不需要显式的 lock。所谓阻塞，也就是如果读取（value :&#x3D; &lt;-ch）它将会被阻塞，直到有数据接收。其次，任何发送（ch&lt;-5）将会被阻塞，直到数据被读出。无缓冲 channel 是在多个 goroutine 之间同步很棒的工具。</p>
+<h2 id="Buffered-Channels"><a href="#Buffered-Channels" class="headerlink" title="Buffered Channels"></a>Buffered Channels</h2><p>上面我们介绍了默认的非缓存类型的 channel，不过 Go 也允许指定 channel 的缓冲大小，很简单，就是 channel 可以存储多少元素。ch:&#x3D; make (chan bool, 4)，创建了可以存储 4 个元素的 bool 型 channel。在这个 channel 中，前 4 个元素可以无阻塞的写入。当写入第 5 个元素时，代码将会阻塞，直到其他 goroutine 从 channel 中读取一些元素，腾出空间。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">type</span>, value)</span><br></pre></td></tr></table></figure>
+
+<p>当 value &#x3D; 0 时，channel 是无缓冲阻塞读写的，当 value &gt; 0 时，channel 有缓冲、是非阻塞的，直到写满 value 个元素才阻塞写入。</p>
+<p>我们看一下下面这个例子，你可以在自己本机测试一下，修改相应的 value 值</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">2</span>) <span class="comment">// 修改 2 为 1 就报错，修改 2 为 3 可以正常运行</span></span><br><span class="line">    c &lt;- <span class="number">1</span></span><br><span class="line">    c &lt;- <span class="number">2</span></span><br><span class="line">    fmt.Println(&lt;-c)</span><br><span class="line">    fmt.Println(&lt;-c)</span><br><span class="line">&#125;</span><br><span class="line">        <span class="comment">// 修改为 1 报如下的错误:</span></span><br><span class="line">        <span class="comment">// fatal error: all goroutines are asleep - deadlock!</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Range-和-Close"><a href="#Range-和-Close" class="headerlink" title="Range 和 Close"></a>Range 和 Close</h2><p>上面这个例子中，我们需要读取两次 c，这样不是很方便，Go 考虑到了这一点，所以也可以通过 range，像操作 slice 或者 map 一样操作缓存类型的 channel，请看下面的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fibonacci</span><span class="params">(n <span class="type">int</span>, c <span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    x, y := <span class="number">1</span>, <span class="number">1</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">        c &lt;- x</span><br><span class="line">        x, y = y, x + y</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">10</span>)</span><br><span class="line">    <span class="keyword">go</span> fibonacci(<span class="built_in">cap</span>(c), c)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> c &#123;</span><br><span class="line">        fmt.Println(i)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>for i :&#x3D; range c 能够不断的读取 channel 里面的数据，直到该 channel 被显式的关闭。上面代码我们看到可以显式的关闭 channel，生产者通过内置函数 close 关闭 channel。关闭 channel 之后就无法再发送任何数据了，在消费方可以通过语法 v, ok :&#x3D; &lt;-ch 测试 channel 是否被关闭。如果 ok 返回 false，那么说明 channel 已经没有任何数据并且已经被关闭。</p>
+<h2 id="Select"><a href="#Select" class="headerlink" title="Select"></a>Select</h2><p>我们上面介绍的都是只有一个 channel 的情况，那么如果存在多个 channel 的时候，我们该如何操作呢，Go 里面提供了一个关键字 select，通过 select 可以监听 channel 上的数据流动。</p>
+<p>select 默认是阻塞的，只有当监听的 channel 中有发送或接收可以进行时才会运行，当多个 channel 都准备好的时候，select 是随机的选择一个执行的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fibonacci</span><span class="params">(c, quit <span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    x, y := <span class="number">1</span>, <span class="number">1</span></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> c &lt;- x:</span><br><span class="line">            x, y = y, x + y</span><br><span class="line">        <span class="keyword">case</span> &lt;-quit:</span><br><span class="line">            fmt.Println(<span class="string">&quot;quit&quot;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">    quit := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">            fmt.Println(&lt;-c)</span><br><span class="line">        &#125;</span><br><span class="line">        quit &lt;- <span class="number">0</span></span><br><span class="line">    &#125;()</span><br><span class="line">    fibonacci(c, quit)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="超时"><a href="#超时" class="headerlink" title="超时"></a>超时</h2><p>有时候会出现 goroutine 阻塞的情况，那么我们如何避免整个程序进入阻塞的情况呢？我们可以利用 select 来设置超时，通过如下的方式实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line">    o := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>)</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">for</span> &#123;</span><br><span class="line">            <span class="keyword">select</span> &#123;</span><br><span class="line">                <span class="keyword">case</span> v := &lt;- c:</span><br><span class="line">                    <span class="built_in">println</span>(v)</span><br><span class="line">                <span class="keyword">case</span> &lt;- time.After(<span class="number">5</span> * time.Second):</span><br><span class="line">                    <span class="built_in">println</span>(<span class="string">&quot;timeout&quot;</span>)</span><br><span class="line">                    o &lt;- <span class="literal">true</span></span><br><span class="line">                    <span class="comment">// 此处的break只是跳出了select循环，并未终止for循环，要用return才能终止这个子进程</span></span><br><span class="line">                    <span class="keyword">break</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    &lt;- o</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="runtime-goroutine"><a href="#runtime-goroutine" class="headerlink" title="runtime goroutine"></a>runtime goroutine</h2><p>runtime 包中有几个处理 goroutine 的函数：</p>
+<p>Goexit</p>
+<p>退出当前执行的 goroutine，但是 defer 函数还会继续调用</p>
+<p>Gosched</p>
+<p>让出当前 goroutine 的执行权限，调度器安排其他等待的任务运行，并在下次某个时候从该位置恢复执行。</p>
+<p>NumCPU</p>
+<p>返回 CPU 核数量</p>
+<p>NumGoroutine</p>
+<p>返回正在执行和排队的任务总数</p>
+<p>GOMAXPROCS</p>
+<p>用来设置可以并行计算的 CPU 核数的最大值，并返回之前的值。</p>
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/027-concurrency/3165#577813">02.7. 并发 | 第二章. Go 语言基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/16/4.interface/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/16/4.interface/" class="post-title-link" itemprop="url">4.interface</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 08:38:31 / 修改时间：09:01:05" itemprop="dateCreated datePublished" datetime="2022-09-16T08:38:31+08:00">2022-09-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="interface"><a href="#interface" class="headerlink" title="interface"></a>interface</h1><p>Go 语言里面设计最精妙的应该算 interface，它让面向对象，内容组织实现非常的方便，当你看完这一章，你就会被 interface 的巧妙设计所折服。</p>
+<h2 id="什么是-interface"><a href="#什么是-interface" class="headerlink" title="什么是 interface"></a>什么是 interface</h2><p>简单的说，interface 是一组 method 签名的组合，我们通过 interface 来定义对象的一组行为。</p>
+<p>我们前面一章最后一个例子中 Student 和 Employee 都能 SayHi，虽然他们的内部实现不一样，但是那不重要，重要的是他们都能 say hi</p>
+<p>让我们来继续做更多的扩展，Student 和 Employee 实现另一个方法 Sing，然后 Student 实现方法 BorrowMoney 而 Employee 实现 SpendSalary。</p>
+<p>这样 Student 实现了三个方法：SayHi、Sing、BorrowMoney；而 Employee 实现了 SayHi、Sing、SpendSalary。</p>
+<p>上面这些方法的组合称为 interface (被对象 Student 和 Employee 实现)。例如 Student 和 Employee 都实现了 interface：SayHi 和 Sing，也就是这两个对象是该 interface 类型。而 Employee 没有实现这个 interface：SayHi、Sing 和 BorrowMoney，因为 Employee 没有实现 BorrowMoney 这个方法。</p>
+<h2 id="interface-类型"><a href="#interface-类型" class="headerlink" title="interface 类型"></a>interface 类型</h2><p>interface 类型定义了一组方法，如果某个对象实现了某个接口的所有方法，则此对象就实现了此接口。详细的语法参考下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段 Human</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">    loan <span class="type">float32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段 Human</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">    money <span class="type">float32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 对象实现 Sayhi 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 对象实现 Sing 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> Sing(lyrics <span class="type">string</span>) &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;La la, la la la, la la la la la...&quot;</span>, lyrics)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 对象实现 Guzzle 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> Guzzle(beerStein <span class="type">string</span>) &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Guzzle Guzzle Guzzle...&quot;</span>, beerStein)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Employee 重载 Human 的 Sayhi 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *Employee)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s, I work at %s. Call me on %s\n&quot;</span>, e.name,</span><br><span class="line">        e.company, e.phone) <span class="comment">// 此句可以分成多行</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Student 实现 BorrowMoney 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Student)</span></span> BorrowMoney(amount <span class="type">float32</span>) &#123;</span><br><span class="line">    s.loan += amount <span class="comment">// (again and again and...)</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Employee 实现 SpendSalary 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *Employee)</span></span> SpendSalary(amount <span class="type">float32</span>) &#123;</span><br><span class="line">    e.money -= amount <span class="comment">// More vodka please!!! Get me through the day!</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义 interface</span></span><br><span class="line"><span class="keyword">type</span> Men <span class="keyword">interface</span> &#123;</span><br><span class="line">    SayHi()</span><br><span class="line">    Sing(lyrics <span class="type">string</span>)</span><br><span class="line">    Guzzle(beerStein <span class="type">string</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> YoungChap <span class="keyword">interface</span> &#123;</span><br><span class="line">    SayHi()</span><br><span class="line">    Sing(song <span class="type">string</span>)</span><br><span class="line">    BorrowMoney(amount <span class="type">float32</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ElderlyGent <span class="keyword">interface</span> &#123;</span><br><span class="line">    SayHi()</span><br><span class="line">    Sing(song <span class="type">string</span>)</span><br><span class="line">    SpendSalary(amount <span class="type">float32</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码我们可以知道，interface 可以被任意的对象实现。我们看到上面的 Men interface 被 Human、Student 和 Employee 实现。同理，一个对象可以实现任意多个 interface，例如上面的 Student 实现了 Men 和 YoungChap 两个 interface。</p>
+<p>最后，任意的类型都实现了空 interface (我们这样定义：interface {})，也就是包含 0 个 method 的 interface。</p>
+<h2 id="interface-值"><a href="#interface-值" class="headerlink" title="interface 值"></a>interface 值</h2><p>那么 interface 里面到底能存什么值呢？如果我们定义了一个 interface 的变量，那么这个变量里面可以存实现这个 interface 的任意类型的对象。例如上面例子中，我们定义了一个 Men interface 类型的变量 m，那么 m 里面可以存 Human、Student 或者 Employee 值。</p>
+<p>因为 m 能够持有这三种类型的对象，所以我们可以定义一个包含 Men 类型元素的 slice，这个 slice 可以被赋予实现了 Men 接口的任意结构的对象，这个和我们传统意义上面的 slice 有所不同。</p>
+<p>让我们来看一下下面这个例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">    loan <span class="type">float32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">    money <span class="type">float32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 实现 SayHi 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 实现 Sing 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h Human)</span></span> Sing(lyrics <span class="type">string</span>) &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;La la la la...&quot;</span>, lyrics)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Employee 重载 Human 的 SayHi 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e Employee)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s, I work at %s. Call me on %s\n&quot;</span>, e.name,</span><br><span class="line">        e.company, e.phone)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Interface Men 被 Human, Student 和 Employee 实现</span></span><br><span class="line"><span class="comment">// 因为这三个类型都实现了这两个方法</span></span><br><span class="line"><span class="keyword">type</span> Men <span class="keyword">interface</span> &#123;</span><br><span class="line">    SayHi()</span><br><span class="line">    Sing(lyrics <span class="type">string</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mike := Student&#123;Human&#123;<span class="string">&quot;Mike&quot;</span>, <span class="number">25</span>, <span class="string">&quot;222-222-XXX&quot;</span>&#125;, <span class="string">&quot;MIT&quot;</span>, <span class="number">0.00</span>&#125;</span><br><span class="line">    paul := Student&#123;Human&#123;<span class="string">&quot;Paul&quot;</span>, <span class="number">26</span>, <span class="string">&quot;111-222-XXX&quot;</span>&#125;, <span class="string">&quot;Harvard&quot;</span>, <span class="number">100</span>&#125;</span><br><span class="line">    sam := Employee&#123;Human&#123;<span class="string">&quot;Sam&quot;</span>, <span class="number">36</span>, <span class="string">&quot;444-222-XXX&quot;</span>&#125;, <span class="string">&quot;Golang Inc.&quot;</span>, <span class="number">1000</span>&#125;</span><br><span class="line">    tom := Employee&#123;Human&#123;<span class="string">&quot;Tom&quot;</span>, <span class="number">37</span>, <span class="string">&quot;222-444-XXX&quot;</span>&#125;, <span class="string">&quot;Things Ltd.&quot;</span>, <span class="number">5000</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义 Men 类型的变量i</span></span><br><span class="line">    <span class="keyword">var</span> i Men</span><br><span class="line"></span><br><span class="line">    <span class="comment">// i 能存储 Student</span></span><br><span class="line">    i = mike</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Mike, a Student:&quot;</span>)</span><br><span class="line">    i.SayHi()</span><br><span class="line">    i.Sing(<span class="string">&quot;November rain&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// i 也能存储 Employee</span></span><br><span class="line">    i = tom</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is tom, an Employee:&quot;</span>)</span><br><span class="line">    i.SayHi()</span><br><span class="line">    i.Sing(<span class="string">&quot;Born to be wild&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义了 slice Men</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Let&#x27;s use a slice of Men and see what happens&quot;</span>)</span><br><span class="line">    x := <span class="built_in">make</span>([]Men, <span class="number">3</span>)</span><br><span class="line">    <span class="comment">// 这三个都是不同类型的元素，但是他们实现了 interface 同一个接口</span></span><br><span class="line">    x[<span class="number">0</span>], x[<span class="number">1</span>], x[<span class="number">2</span>] = paul, sam, mike</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, value := <span class="keyword">range</span> x&#123;</span><br><span class="line">        value.SayHi()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码，你会发现 interface 就是一组抽象方法的集合，它必须由其他非 interface 类型实现，而不能自我实现， Go 通过 interface 实现了 duck-typing: 即 “当看到一只鸟走起来像鸭子、游泳起来像鸭子、叫起来也像鸭子，那么这只鸟就可以被称为鸭子”。</p>
+<h2 id="空-interface"><a href="#空-interface" class="headerlink" title="空 interface"></a>空 interface</h2><p>空 interface (interface {}) 不包含任何的 method，正因为如此，所有的类型都实现了空 interface。空 interface 对于描述起不到任何的作用 (因为它不包含任何的 method），但是空 interface 在我们需要存储任意类型的数值的时候相当有用，因为它可以存储任意类型的数值。它有点类似于 C 语言的 void* 类型。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义 a 为空接口</span></span><br><span class="line"><span class="keyword">var</span> a <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"><span class="keyword">var</span> i <span class="type">int</span> = <span class="number">5</span></span><br><span class="line">s := <span class="string">&quot;Hello world&quot;</span></span><br><span class="line"><span class="comment">// a 可以存储任意类型的数值</span></span><br><span class="line">a = i</span><br><span class="line">a = s</span><br></pre></td></tr></table></figure>
+
+<p>一个函数把 interface {} 作为参数，那么他可以接受任意类型的值作为参数，如果一个函数返回 interface {}, 那么也就可以返回任意类型的值。是不是很有用啊！</p>
+<h2 id="interface-函数参数"><a href="#interface-函数参数" class="headerlink" title="interface 函数参数"></a>interface 函数参数</h2><p>interface 的变量可以持有任意实现该 interface 类型的对象，这给我们编写函数 (包括 method) 提供了一些额外的思考，我们是不是可以通过定义 interface 参数，让函数接受各种类型的参数。</p>
+<p>举个例子：fmt.Println 是我们常用的一个函数，但是你是否注意到它可以接受任意类型的数据。打开 fmt 的源码文件，你会看到这样一个定义:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Stringer <span class="keyword">interface</span> &#123;</span><br><span class="line">     String() <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，任何实现了 String 方法的类型都能作为参数被 fmt.Println 调用，让我们来试一试</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;strconv&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过这个方法 Human 实现了 fmt.Stringer</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h Human)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;❰&quot;</span>+h.name+<span class="string">&quot; - &quot;</span>+strconv.Itoa(h.age)+<span class="string">&quot; years -  ✆ &quot;</span> +h.phone+<span class="string">&quot;❱&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Bob := Human&#123;<span class="string">&quot;Bob&quot;</span>, <span class="number">39</span>, <span class="string">&quot;000-7777-XXX&quot;</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This Human is : &quot;</span>, Bob)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="interface-变量存储的类型"><a href="#interface-变量存储的类型" class="headerlink" title="interface 变量存储的类型"></a>interface 变量存储的类型</h2><p>我们知道 interface 的变量里面可以存储任意类型的数值 (该类型实现了 interface)。那么我们怎么反向知道这个变量里面实际保存了的是哪个类型的对象呢？目前常用的有两种方法：</p>
+<p>Comma-ok 断言</p>
+<p>Go 语言里面有一个语法，可以直接判断是否是该类型的变量： value, ok &#x3D; element.(T)，这里 value 就是变量的值，ok 是一个 bool 类型，element 是 interface 变量，T 是断言的类型。</p>
+<p>如果 element 里面确实存储了 T 类型的数值，那么 ok 返回 true，否则返回 false。</p>
+<p>让我们通过一个例子来更加深入的理解。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;strconv&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Element <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> List [] Element</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义了 String 方法，实现了 fmt.Stringer</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Person)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;(name: &quot;</span> + p.name + <span class="string">&quot; - age: &quot;</span>+strconv.Itoa(p.age)+ <span class="string">&quot; years)&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    list := <span class="built_in">make</span>(List, <span class="number">3</span>)</span><br><span class="line">    list[<span class="number">0</span>] = <span class="number">1</span> <span class="comment">// an int</span></span><br><span class="line">    list[<span class="number">1</span>] = <span class="string">&quot;Hello&quot;</span> <span class="comment">// a string</span></span><br><span class="line">    list[<span class="number">2</span>] = Person&#123;<span class="string">&quot;Dennis&quot;</span>, <span class="number">70</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> index, element := <span class="keyword">range</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> value, ok := element.(<span class="type">int</span>); ok &#123;</span><br><span class="line">            fmt.Printf(<span class="string">&quot;list[%d] is an int and its value is %d\n&quot;</span>, index, value)</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> value, ok := element.(<span class="type">string</span>); ok &#123;</span><br><span class="line">            fmt.Printf(<span class="string">&quot;list[%d] is a string and its value is %s\n&quot;</span>, index, value)</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> value, ok := element.(Person); ok &#123;</span><br><span class="line">            fmt.Printf(<span class="string">&quot;list[%d] is a Person and its value is %s\n&quot;</span>, index, value)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            fmt.Printf(<span class="string">&quot;list[%d] is of a different type\n&quot;</span>, index)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是不是很简单啊，同时你是否注意到了多个 if 里面，还记得我前面介绍流程时讲过，if 里面允许初始化变量。</p>
+<p>也许你注意到了，我们断言的类型越多，那么 if else 也就越多，所以才引出了下面要介绍的 switch。</p>
+<p>switch 测试</p>
+<p>最好的讲解就是代码例子，现在让我们重写上面的这个实现</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;strconv&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Element <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> List [] Element</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 打印</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Person)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;(name: &quot;</span> + p.name + <span class="string">&quot; - age: &quot;</span>+strconv.Itoa(p.age)+ <span class="string">&quot; years)&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    list := <span class="built_in">make</span>(List, <span class="number">3</span>)</span><br><span class="line">    list[<span class="number">0</span>] = <span class="number">1</span> <span class="comment">// an int</span></span><br><span class="line">    list[<span class="number">1</span>] = <span class="string">&quot;Hello&quot;</span> <span class="comment">// a string</span></span><br><span class="line">    list[<span class="number">2</span>] = Person&#123;<span class="string">&quot;Dennis&quot;</span>, <span class="number">70</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> index, element := <span class="keyword">range</span> list&#123;</span><br><span class="line">        <span class="keyword">switch</span> value := element.(<span class="keyword">type</span>) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="type">int</span>:</span><br><span class="line">                fmt.Printf(<span class="string">&quot;list[%d] is an int and its value is %d\n&quot;</span>, index, value)</span><br><span class="line">            <span class="keyword">case</span> <span class="type">string</span>:</span><br><span class="line">                fmt.Printf(<span class="string">&quot;list[%d] is a string and its value is %s\n&quot;</span>, index, value)</span><br><span class="line">            <span class="keyword">case</span> Person:</span><br><span class="line">                fmt.Printf(<span class="string">&quot;list[%d] is a Person and its value is %s\n&quot;</span>, index, value)</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                fmt.Printf(<span class="string">&quot;list[%d] is of a different type&quot;</span>, index)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一点需要强调的是：<code>element.(type)</code> 语法不能在 switch 外的任何逻辑里面使用，如果你要在 switch 外面判断一个类型就使用 <code>comma-ok</code>。</p>
+<h2 id="嵌入-interface"><a href="#嵌入-interface" class="headerlink" title="嵌入 interface"></a>嵌入 interface</h2><p>Go 里面真正吸引人的是它内置的逻辑语法，就像我们在学习 Struct 时学习的匿名字段，多么的优雅啊，那么相同的逻辑引入到 interface 里面，那不是更加完美了。如果一个 interface1 作为 interface2 的一个嵌入字段，那么 interface2 隐式的包含了 interface1 里面的 method。</p>
+<p>我们可以看到源码包 container&#x2F;heap 里面有这样的一个定义</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Interface <span class="keyword">interface</span> &#123;</span><br><span class="line">    sort.Interface <span class="comment">// 嵌入字段 sort.Interface</span></span><br><span class="line">    Push(x <span class="keyword">interface</span>&#123;&#125;) <span class="comment">// a Push method to push elements into the heap</span></span><br><span class="line">    Pop() <span class="keyword">interface</span>&#123;&#125; <span class="comment">// a Pop elements that pops elements from the heap</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看到 sort.Interface 其实就是嵌入字段，把 sort.Interface 的所有 method 给隐式的包含进来了。也就是下面三个方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Interface <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Len is the number of elements in the collection.</span></span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">    <span class="comment">// Less returns whether the element with index i should sort</span></span><br><span class="line">    <span class="comment">// before the element with index j.</span></span><br><span class="line">    Less(i, j <span class="type">int</span>) <span class="type">bool</span></span><br><span class="line">    <span class="comment">// Swap swaps the elements with indexes i and j.</span></span><br><span class="line">    Swap(i, j <span class="type">int</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h2><p>Go 语言实现了反射，所谓反射就是能检查程序在运行时的状态。我们一般用到的包是 reflect 包。如何运用 reflect 包，官方的这篇文章详细的讲解了 reflect 包的实现原理，laws of reflection</p>
+<p>使用 reflect 一般分成三步，下面简要的讲解一下：要去反射是一个类型的值 (这些值都实现了空 interface)，首先需要把它转化成 reflect 对象 (reflect.Type 或者 reflect.Value，根据不同的情况调用不同的函数)。这两种获取方式如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">t := reflect.TypeOf(i)    <span class="comment">// 得到类型的元数据,通过t我们能获取类型定义里面的所有元素</span></span><br><span class="line">v := reflect.ValueOf(i)   <span class="comment">// 得到实际的值，通过 v 我们获取存储在里面的值，还可以去改变值</span></span><br></pre></td></tr></table></figure>
+
+<p>转化为 reflect 对象之后我们就可以进行一些操作了，也就是将 reflect 对象转化成相应的值，例如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">name := t.Elem().Field(<span class="number">0</span>).Name  <span class="comment">// 获取定义在 struct 里面第一个字段的字段名</span></span><br><span class="line">value := v.Elem().Field(<span class="number">0</span>).String()  <span class="comment">// 获取存储在第一个字段里面的值</span></span><br></pre></td></tr></table></figure>
+
+<p>获取反射值能返回相应的类型和数值</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line">v := reflect.ValueOf(x)</span><br><span class="line">fmt.Println(<span class="string">&quot;type:&quot;</span>, v.Type())</span><br><span class="line">fmt.Println(<span class="string">&quot;kind is float64:&quot;</span>, v.Kind() == reflect.Float64)</span><br><span class="line">fmt.Println(<span class="string">&quot;value:&quot;</span>, v.Float())</span><br></pre></td></tr></table></figure>
+
+<p>转载文章: <a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/026-interface/3164">02.6. interface | 第二章. Go 语言基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/16/3.struct%E5%92%8C%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/16/3.struct%E5%92%8C%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">3.struct和面向对象</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-16 08:15:17 / 修改时间：08:37:14" itemprop="dateCreated datePublished" datetime="2022-09-16T08:15:17+08:00">2022-09-16</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h1><p>Go 语言中，也和 C 或者其他语言一样，我们可以声明新的类型，作为其它类型的属性或字段的容器。例如，我们可以创建一个自定义类型 person 代表一个人的实体。这个实体拥有属性：姓名和年龄。这样的类型我们称之 struct。如下代码所示:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如何使用 struct 呢？请看下面的代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> person <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> P person  <span class="comment">// P 现在就是 person 类型的变量了</span></span><br><span class="line"></span><br><span class="line">P.name = <span class="string">&quot;Astaxie&quot;</span>  <span class="comment">// 赋值 &quot;Astaxie&quot; 给 P 的 name 属性.</span></span><br><span class="line">P.age = <span class="number">25</span>  <span class="comment">// 赋值 &quot;25&quot; 给变量 P 的 age 属性</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;The person&#x27;s name is %s&quot;</span>, P.name)  <span class="comment">// 访问 P 的 name 属性.</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="struct-的匿名字段"><a href="#struct-的匿名字段" class="headerlink" title="struct 的匿名字段"></a>struct 的匿名字段</h1><p>我们上面介绍了如何定义一个 struct，定义的时候是字段名与其类型一一对应，实际上 Go 支持只提供类型，而不写字段名的方式，也就是匿名字段，也称为嵌入字段。</p>
+<p>当匿名字段是一个 struct 的时候，那么这个 struct 所拥有的全部字段都被隐式地引入了当前定义的这个 struct。</p>
+<p>让我们来看一个例子，让上面说的这些更具体化</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    weight <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human  <span class="comment">// 匿名字段，那么默认 Student 就包含了 Human 的所有字段</span></span><br><span class="line">    speciality <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 我们初始化一个学生</span></span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="number">120</span>&#125;, <span class="string">&quot;Computer Science&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 我们访问相应的字段</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His name is &quot;</span>, mark.name)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His age is &quot;</span>, mark.age)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His weight is &quot;</span>, mark.weight)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His speciality is &quot;</span>, mark.speciality)</span><br><span class="line">    <span class="comment">// 修改对应的备注信息</span></span><br><span class="line">    mark.speciality = <span class="string">&quot;AI&quot;</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark changed his speciality&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;His speciality is &quot;</span>, mark.speciality)</span><br><span class="line">    <span class="comment">// 修改他的年龄信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark become old&quot;</span>)</span><br><span class="line">    mark.age = <span class="number">46</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His age is&quot;</span>, mark.age)</span><br><span class="line">    <span class="comment">// 修改他的体重信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Mark is not an athlet anymore&quot;</span>)</span><br><span class="line">    mark.weight += <span class="number">60</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;His weight is&quot;</span>, mark.weight)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个问题：如果 human 里面有一个字段叫做 phone，而 student 也有一个字段叫做 phone，那么该怎么办呢？</p>
+<p>Go 里面很简单的解决了这个问题，最外层的优先访问，也就是当你通过 student.phone 访问的时候，是访问 student 里面的字段，而不是 human 里面的字段。</p>
+<p>这样就允许我们去重载通过匿名字段继承的一些字段，当然如果我们想访问重载后对应匿名类型里面的字段，可以通过匿名字段名来访问。请看下面的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span>  <span class="comment">// Human 类型拥有的字段</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human  <span class="comment">// 匿名字段 Human</span></span><br><span class="line">    speciality <span class="type">string</span></span><br><span class="line">    phone <span class="type">string</span>  <span class="comment">// 雇员的 phone 字段</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Bob := Employee&#123;Human&#123;<span class="string">&quot;Bob&quot;</span>, <span class="number">34</span>, <span class="string">&quot;777-444-XXXX&quot;</span>&#125;, <span class="string">&quot;Designer&quot;</span>, <span class="string">&quot;333-222&quot;</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Bob&#x27;s work phone is:&quot;</span>, Bob.phone)</span><br><span class="line">    <span class="comment">// 如果我们要访问 Human 的 phone 字段</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;Bob&#x27;s personal phone is:&quot;</span>, Bob.Human.phone)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h1><p>你是否想过函数当作 struct 的字段一样来处理呢？今天我们就讲解一下函数的另一种形态，带有接收者的函数，我们称为 <code>method</code></p>
+<h2 id="method"><a href="#method" class="headerlink" title="method"></a>method</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r ReceiverType)</span></span> funcName(parameters) (results)</span><br></pre></td></tr></table></figure>
+
+<p>method 是附属在一个给定的类型上的，他的语法和函数的声明语法几乎一样，只是在 func 后面增加了一个 receiver (也就是 method 所依从的主体)。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;math&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Rectangle <span class="keyword">struct</span> &#123;</span><br><span class="line">    width, height <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Circle <span class="keyword">struct</span> &#123;</span><br><span class="line">    radius <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r Rectangle)</span></span> area() <span class="type">float64</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> r.width*r.height</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c Circle)</span></span> area() <span class="type">float64</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> c.radius * c.radius * math.Pi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    r1 := Rectangle&#123;<span class="number">12</span>, <span class="number">2</span>&#125;</span><br><span class="line">    r2 := Rectangle&#123;<span class="number">9</span>, <span class="number">4</span>&#125;</span><br><span class="line">    c1 := Circle&#123;<span class="number">10</span>&#125;</span><br><span class="line">    c2 := Circle&#123;<span class="number">25</span>&#125;</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of r1 is: &quot;</span>, r1.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of r2 is: &quot;</span>, r2.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of c1 is: &quot;</span>, c1.area())</span><br><span class="line">    fmt.Println(<span class="string">&quot;Area of c2 is: &quot;</span>, c2.area())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在使用 method 的时候重要注意几点</p>
+<p>虽然 method 的名字一模一样，但是如果接收者不一样，那么 method 就不一样<br>method 里面可以访问接收者的字段<br>调用 method 通过 . 访问，就像 struct 里面访问字段一样</p>
+<p>在上例，method area () 分别属于 Rectangle 和 Circle， 于是他们的 Receiver 就变成了 Rectangle 和 Circle, 或者说，这个 area () 方法 是由 Rectangle&#x2F;Circle 发出的。</p>
+<h2 id="method-继承"><a href="#method-继承" class="headerlink" title="method 继承"></a>method 继承</h2><p>前面一章我们学习了字段的继承，那么你也会发现 Go 的一个神奇之处，method 也是可以继承的。如果匿名字段实现了一个 method，那么包含这个匿名字段的 struct 也能调用该 method。让我们来看下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在 human 上面定义了一个 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="string">&quot;222-222-YYYY&quot;</span>&#125;, <span class="string">&quot;MIT&quot;</span>&#125;</span><br><span class="line">    sam := Employee&#123;Human&#123;<span class="string">&quot;Sam&quot;</span>, <span class="number">45</span>, <span class="string">&quot;111-888-XXXX&quot;</span>&#125;, <span class="string">&quot;Golang Inc&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    mark.SayHi()</span><br><span class="line">    sam.SayHi()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="method-重写"><a href="#method-重写" class="headerlink" title="method 重写"></a>method 重写</h2><p>上面的例子中，如果 Employee 想要实现自己的 SayHi, 怎么办？简单，和匿名字段冲突一样的道理，我们可以在 Employee 上面定义一个 method，重写了匿名字段的方法。请看下面的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Human <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="type">string</span></span><br><span class="line">    age <span class="type">int</span></span><br><span class="line">    phone <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    school <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Human <span class="comment">// 匿名字段</span></span><br><span class="line">    company <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Human 定义 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(h *Human)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s you can call me on %s\n&quot;</span>, h.name, h.phone)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Employee 的 method 重写 Human 的 method</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *Employee)</span></span> SayHi() &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Hi, I am %s, I work at %s. Call me on %s\n&quot;</span>, e.name,</span><br><span class="line">        e.company, e.phone) <span class="comment">//Yes you can split into 2 lines here.</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mark := Student&#123;Human&#123;<span class="string">&quot;Mark&quot;</span>, <span class="number">25</span>, <span class="string">&quot;222-222-YYYY&quot;</span>&#125;, <span class="string">&quot;MIT&quot;</span>&#125;</span><br><span class="line">    sam := Employee&#123;Human&#123;<span class="string">&quot;Sam&quot;</span>, <span class="number">45</span>, <span class="string">&quot;111-888-XXXX&quot;</span>&#125;, <span class="string">&quot;Golang Inc&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    mark.SayHi()</span><br><span class="line">    sam.SayHi()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/024-struct-type/3162">02.4. struct 类型 | 第二章. Go 语言基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/15/2.%E6%B5%81%E7%A8%8B%E5%92%8C%E5%87%BD%E6%95%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1987,334 +2331,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E7%89%A9%E7%90%86%E5%B1%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E7%89%A9%E7%90%86%E5%B1%82/" class="post-title-link" itemprop="url">计算机网络—物理层</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-04 12:15:47 / 修改时间：12:28:32" itemprop="dateCreated datePublished" datetime="2022-09-04T12:15:47+08:00">2022-09-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p>[CS-Notes&#x2F;计算机网络 - 物理层.md at master · CyC2018&#x2F;CS-Notes (github.com)](<a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络</a> - 物理层.md)</p>
-<h1 id="计算机网络-物理层"><a href="#计算机网络-物理层" class="headerlink" title="计算机网络 - 物理层"></a>计算机网络 - 物理层</h1><h2 id="通信方式"><a href="#通信方式" class="headerlink" title="通信方式"></a>通信方式</h2><p>根据信息在传输线上的传送方向，分为以下三种通信方式：</p>
-<ul>
-<li>单工通信：单向传输</li>
-<li>半双工通信：双向交替传输</li>
-<li>全双工通信：双向同时传输</li>
-</ul>
-<h2 id="带通调制"><a href="#带通调制" class="headerlink" title="带通调制"></a>带通调制</h2><p>模拟信号是连续的信号，数字信号是离散的信号。带通调制把数字信号转换为模拟信号。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/59e58745fe8f7b2ec9020e6fb10da969ee0ecc5ba40bb04318690171449586bc/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63333466343530332d663632632d343034332d396463362d3365303332383836353764662e6a7067"><img src="https://camo.githubusercontent.com/59e58745fe8f7b2ec9020e6fb10da969ee0ecc5ba40bb04318690171449586bc/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63333466343530332d663632632d343034332d396463362d3365303332383836353764662e6a7067" alt="img"></a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E6%A6%82%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/03/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E6%A6%82%E8%BF%B0/" class="post-title-link" itemprop="url">计算机网络—概述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-09-03 13:30:51" itemprop="dateCreated datePublished" datetime="2022-09-03T13:30:51+08:00">2022-09-03</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-09-04 12:15:06" itemprop="dateModified" datetime="2022-09-04T12:15:06+08:00">2022-09-04</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p><a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md">https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%20-%20%E6%A6%82%E8%BF%B0.md</a></p>
-<h2 id="网络的网络"><a href="#网络的网络" class="headerlink" title="网络的网络"></a>网络的网络</h2><p>网络把主机连接起来，而互连网（internet）是把多种不同的网络连接起来，因此互连网是网络的网络。而互联网（Internet）是全球范围的互连网。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966"><img src="https://camo.githubusercontent.com/30269c605eac9bc8baba56e12beb83934b9641968af6a5b24bc43a2e399f20c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f6e6574776f726b2d6f662d6e6574776f726b732e676966" alt="img"></a></p>
-<h2 id="ISP"><a href="#ISP" class="headerlink" title="ISP"></a>ISP</h2><p>互联网服务提供商 ISP 可以从互联网管理机构获得许多 IP 地址，同时拥有通信线路以及路由器等联网设备，个人或机构向 ISP 缴纳一定的费用就可以接入互联网。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/06e0f91855cd98db279cd8bf27785ec819e525690c61b646497b1da76d05bea3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37326265303163642d343161652d343566372d393962392d6138643238346534346464342e706e67"><img src="https://camo.githubusercontent.com/06e0f91855cd98db279cd8bf27785ec819e525690c61b646497b1da76d05bea3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37326265303163642d343161652d343566372d393962392d6138643238346534346464342e706e67" alt="img"></a></p>
-<p>目前的互联网是一种多层次 ISP 结构，ISP 根据覆盖面积的大小分为第一层 ISP、区域 ISP 和接入 ISP。互联网交换点 IXP 允许两个 ISP 直接相连而不用经过第三个 ISP。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/b6d96160cefcb96d6adc7787ac9266bb3adcb346b5c785fe0dfcc899c961c6d5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33626534323630312d396433332d346432392d383335382d6139643136343533616639332e706e67"><img src="https://camo.githubusercontent.com/b6d96160cefcb96d6adc7787ac9266bb3adcb346b5c785fe0dfcc899c961c6d5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33626534323630312d396433332d346432392d383335382d6139643136343533616639332e706e67" alt="img"></a></p>
-<h2 id="主机之间的通信方式"><a href="#主机之间的通信方式" class="headerlink" title="主机之间的通信方式"></a>主机之间的通信方式</h2><ul>
-<li>客户-服务器（C&#x2F;S）：客户是服务的请求方，服务器是服务的提供方。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c399fea325b01cf994fff43d033ea08352708c4988ced7938c008bea1ec42a3c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313438393463322d306263342d343662352d626566392d3033313661363965663532312e6a7067"><img src="https://camo.githubusercontent.com/c399fea325b01cf994fff43d033ea08352708c4988ced7938c008bea1ec42a3c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313438393463322d306263342d343662352d626566392d3033313661363965663532312e6a7067" alt="img"></a></p>
-<ul>
-<li>对等（P2P）：不区分客户和服务器。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/1ce82a88a4c4c6b6125484c6ab4f5587e2e390c49392aa9309ba7e0bc1514466/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34323433306539342d333133372d343863302d626462362d3363656261663931303265332e6a7067"><img src="https://camo.githubusercontent.com/1ce82a88a4c4c6b6125484c6ab4f5587e2e390c49392aa9309ba7e0bc1514466/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34323433306539342d333133372d343863302d626462362d3363656261663931303265332e6a7067" alt="img"></a></p>
-<h2 id="电路交换与分组交换"><a href="#电路交换与分组交换" class="headerlink" title="电路交换与分组交换"></a>电路交换与分组交换</h2><h3 id="1-电路交换"><a href="#1-电路交换" class="headerlink" title="1. 电路交换"></a>1. 电路交换</h3><p>电路交换用于电话通信系统，两个用户要通信之前需要建立一条专用的物理链路，并且在整个通信过程中始终占用该链路。由于通信的过程中不可能一直在使用传输线路，因此电路交换对线路的利用率很低，往往不到 10%。</p>
-<h3 id="2-分组交换"><a href="#2-分组交换" class="headerlink" title="2. 分组交换"></a>2. 分组交换</h3><p>每个分组都有首部和尾部，包含了源地址和目的地址等控制信息，在同一个传输线路上同时传输多个分组互相不会影响，因此在同一条传输线路上允许同时传输多个分组，也就是说分组交换不需要占用传输线路。</p>
-<p>在一个邮局通信系统中，邮局收到一份邮件之后，先存储下来，然后把相同目的地的邮件一起转发到下一个目的地，这个过程就是存储转发过程，分组交换也使用了存储转发过程。</p>
-<h2 id="时延"><a href="#时延" class="headerlink" title="时延"></a>时延</h2><p>总时延 &#x3D; 排队时延 + 处理时延 + 传输时延 + 传播时延</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/0a962523171ffa6b3b517823ab985c378b1acf07cd439aec5e9b535b6351efce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34623261653738632d653235342d343464662d396533372d3537386532663262656635322e6a7067"><img src="https://camo.githubusercontent.com/0a962523171ffa6b3b517823ab985c378b1acf07cd439aec5e9b535b6351efce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34623261653738632d653235342d343464662d396533372d3537386532663262656635322e6a7067" alt="img"></a></p>
-<h3 id="1-排队时延"><a href="#1-排队时延" class="headerlink" title="1. 排队时延"></a>1. 排队时延</h3><p>分组在路由器的输入队列和输出队列中排队等待的时间，取决于网络当前的通信量。</p>
-<h3 id="2-处理时延"><a href="#2-处理时延" class="headerlink" title="2. 处理时延"></a>2. 处理时延</h3><p>主机或路由器收到分组时进行处理所需要的时间，例如分析首部、从分组中提取数据、进行差错检验或查找适当的路由等。</p>
-<h3 id="3-传输时延"><a href="#3-传输时延" class="headerlink" title="3. 传输时延"></a>3. 传输时延</h3><p>主机或路由器传输数据帧所需要的时间。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c7aba1e9d6b3102633359b875555573794643242359c985d66e9d0b7c94ae766/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64636462623936632d393037372d343132312d616562382d3734336535346163303261342e706e67"><img src="https://camo.githubusercontent.com/c7aba1e9d6b3102633359b875555573794643242359c985d66e9d0b7c94ae766/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64636462623936632d393037372d343132312d616562382d3734336535346163303261342e706e67" alt="img"></a></p>
-<p>其中 l 表示数据帧的长度，v 表示传输速率。</p>
-<h3 id="4-传播时延"><a href="#4-传播时延" class="headerlink" title="4. 传播时延"></a>4. 传播时延</h3><p>电磁波在信道中传播所需要花费的时间，电磁波传播的速度接近光速。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c9de58438de83509f26f14b6dbab912917d677287c10ec56e26572bbd5527de9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61313631366461632d306531322d343062322d383237642d3965336637663062393430642e706e67"><img src="https://camo.githubusercontent.com/c9de58438de83509f26f14b6dbab912917d677287c10ec56e26572bbd5527de9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61313631366461632d306531322d343062322d383237642d3965336637663062393430642e706e67" alt="img"></a></p>
-<p>其中 l 表示信道长度，v 表示电磁波在信道上的传播速度。</p>
-<h2 id="计算机网络体系结构"><a href="#计算机网络体系结构" class="headerlink" title="计算机网络体系结构"></a>计算机网络体系结构</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/bbe716e11ca979af077d83837c9524453a22219919f65aa791aedacfdbfc7e5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30666136633233372d613930392d346532612d613737312d3263353438356364386365302e706e67"><img src="https://camo.githubusercontent.com/bbe716e11ca979af077d83837c9524453a22219919f65aa791aedacfdbfc7e5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30666136633233372d613930392d346532612d613737312d3263353438356364386365302e706e67" alt="img"></a></p>
-<h3 id="1-五层协议"><a href="#1-五层协议" class="headerlink" title="1. 五层协议"></a>1. 五层协议</h3><ul>
-<li><strong>应用层</strong> ：为特定应用程序提供数据传输服务，例如 HTTP、DNS 等协议。数据单位为报文。</li>
-<li><strong>传输层</strong> ：为进程提供通用数据传输服务。由于应用层协议很多，定义通用的传输层协议就可以支持不断增多的应用层协议。运输层包括两种协议：传输控制协议 TCP，提供面向连接、可靠的数据传输服务，数据单位为报文段；用户数据报协议 UDP，提供无连接、尽最大努力的数据传输服务，数据单位为用户数据报。TCP 主要提供完整性服务，UDP 主要提供及时性服务。</li>
-<li><strong>网络层</strong> ：为主机提供数据传输服务。而传输层协议是为主机中的进程提供数据传输服务。网络层把传输层传递下来的报文段或者用户数据报封装成分组。</li>
-<li><strong>数据链路层</strong> ：网络层针对的还是主机之间的数据传输服务，而主机之间可以有很多链路，链路层协议就是为同一链路的主机提供数据传输服务。数据链路层把网络层传下来的分组封装成帧。</li>
-<li><strong>物理层</strong> ：考虑的是怎样在传输媒体上传输数据比特流，而不是指具体的传输媒体。物理层的作用是尽可能屏蔽传输媒体和通信手段的差异，使数据链路层感觉不到这些差异。</li>
-</ul>
-<h3 id="2-OSI"><a href="#2-OSI" class="headerlink" title="2. OSI"></a>2. OSI</h3><p>其中表示层和会话层用途如下：</p>
-<ul>
-<li><strong>表示层</strong> ：数据压缩、加密以及数据描述，这使得应用程序不必关心在各台主机中数据内部格式不同的问题。</li>
-<li><strong>会话层</strong> ：建立及管理会话。</li>
-</ul>
-<p>五层协议没有表示层和会话层，而是将这些功能留给应用程序开发者处理。</p>
-<h3 id="3-TCP-x2F-IP"><a href="#3-TCP-x2F-IP" class="headerlink" title="3. TCP&#x2F;IP"></a>3. TCP&#x2F;IP</h3><p>它只有四层，相当于五层协议中数据链路层和物理层合并为网络接口层。</p>
-<p>TCP&#x2F;IP 体系结构不严格遵循 OSI 分层概念，应用层可能会直接使用 IP 层或者网络接口层。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/dfd049aa29f5c514450e4a687bb793b6517025da576dde3aabc1f51edb3dda90/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34386437396265382d303835622d343836322d386139642d3138343032656239336233312e706e67"><img src="https://camo.githubusercontent.com/dfd049aa29f5c514450e4a687bb793b6517025da576dde3aabc1f51edb3dda90/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34386437396265382d303835622d343836322d386139642d3138343032656239336233312e706e67" alt="img"></a></p>
-<h3 id="4-数据在各层之间的传递过程"><a href="#4-数据在各层之间的传递过程" class="headerlink" title="4. 数据在各层之间的传递过程"></a>4. 数据在各层之间的传递过程</h3><p>在向下的过程中，需要添加下层协议所需要的首部或者尾部，而在向上的过程中不断拆开首部和尾部。</p>
-<p>路由器只有下面三层协议，因为路由器位于网络核心中，不需要为进程或者应用程序提供服务，因此也就不需要传输层和应用层。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/02/%E5%BC%B1%E5%8F%A3%E4%BB%A4%E6%89%AB%E6%8F%8F%E5%99%A8/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/02/%E5%BC%B1%E5%8F%A3%E4%BB%A4%E6%89%AB%E6%8F%8F%E5%99%A8/" class="post-title-link" itemprop="url">弱口令扫描器</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-09-02 11:00:49" itemprop="dateCreated datePublished" datetime="2022-09-02T11:00:49+08:00">2022-09-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-09-05 11:06:58" itemprop="dateModified" datetime="2022-09-05T11:06:58+08:00">2022-09-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h1><p>弱口令扫描器类型很多，包括扫描ssh，mysql等等，这里介绍的ftp的弱口令扫描器，这些扫描器类型都大差不差。这里主要用到了两个库 ftplib库和threading库</p>
-<p>库的安装可以去我的另一篇文章学习 </p>
-<p><a target="_blank" rel="noopener" href="http://chunquchunlai.top/2022/08/27/%E7%AE%80%E5%8D%95%E7%88%AC%E8%99%AB/">简单爬虫 | RISE (chunquchunlai.top)</a></p>
-<h1 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a><strong>准备阶段</strong></h1><p>我们来学习一下ftplib库和threading库</p>
-<h2 id="————threading库————"><a href="#————threading库————" class="headerlink" title="————threading库————"></a>————threading库————</h2><p>可以去我这篇文章学习</p>
-<p><a target="_blank" rel="noopener" href="http://chunquchunlai.top/2022/08/30/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%AB%AF%E5%8F%A3%E6%89%AB%E6%8F%8F%E5%99%A8/">多线程端口扫描器 | RISE (chunquchunlai.top)</a></p>
-<h2 id="—————ftplib库——————"><a href="#—————ftplib库——————" class="headerlink" title="—————ftplib库——————"></a>—————ftplib库——————</h2><p>ftplib库是因为工作需要，需要对FTP协议下的各种文件进行上传下载操作，Python中默认安装的ftplib模块定义了FTP类,可用来实现简单的ftp客户端，用于上传或下载文件，我们这里主要是去连接ftp服务器，所以涉及不到ftp文件的上传和下载</p>
-<p>常用函数</p>
-<p>ftp.connect():参数是连接ftp的ip和端口</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.connect(&quot;127.0.0.01&quot;,&quot;21&quot;)</span><br></pre></td></tr></table></figure>
-
-<p>ftp.login():ftp登录函数，参数是用户名和密码，如果不用输入，就是匿名登录</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.login(&quot;admin&quot;,&quot;123456&quot;)</span><br></pre></td></tr></table></figure>
-
-<p>ftp.cwd():进入远程目录</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.cwd(&quot;xsl&quot;)</span><br></pre></td></tr></table></figure>
-
-<p>fliname :下载文件</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fliename = &quot;xsl.txt&quot;</span><br></pre></td></tr></table></figure>
-
-<p>ftp.dir():显示目录下的文件</p>
-<p>ftp.mkd():新建远程目录</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.mkd(home)</span><br></pre></td></tr></table></figure>
-
-<p>ftp.rmd:删除远程目录</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ftp.rmd(home)</span><br></pre></td></tr></table></figure>
-
-<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a><strong>代码</strong></h1><p>第一步，导入库</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">import ftplib</span><br><span class="line">import time</span><br><span class="line">import threading</span><br></pre></td></tr></table></figure>
-
-<p>第二步，匿名登录模块</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def anonscan(hostname): #匿名扫描</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp: #创建ftp对象</span><br><span class="line">            ftp.login()                   #，没有设置参数就是匿名登录</span><br><span class="line">            print(&quot;[*]&quot;+str(hostname)+&quot;ftp匿名登录成功&quot;)</span><br><span class="line">            return True                   #返回真</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line">        print(&#x27;[*]&#x27;+str(hostname)+&quot;:ftp匿名登录失败&quot;)</span><br></pre></td></tr></table></figure>
-
-<p>第三步，暴力破解模块</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def pwdscan(hostname, user, pwd):  #暴力破解</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp: #创建ftp对象</span><br><span class="line">            ftp.login(user, pwd)          #登录，这里要输入用户名和密码了</span><br><span class="line">            locka.acquire()               #获得锁（这里使用了多线程，线程函数在主函数里面）</span><br><span class="line">            print(&#x27;[*]&#x27;+str(hostname)+&#x27;:破解成功&#x27;+&#x27;账号:&#x27;+str(user)+&#x27;密码:&#x27;+str(pwd))</span><br><span class="line">            locka.release()               #释放锁</span><br><span class="line">            return True                   #返回真</span><br><span class="line">    except: </span><br><span class="line">        pass</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>第四步，主函数</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">def main(hostname,user):     #多线程执行暴力破解</span><br><span class="line">    if anonscan(hostname):   #如果匿名登录失败，就执行暴力破解</span><br><span class="line">        pass</span><br><span class="line">    else:</span><br><span class="line">       with open(&#x27;pwd.txt&#x27;, &#x27;r&#x27;) as pf:  #打开密码文件，命名为pf（自己随便创建一个文件，里面有正确密码就行了）</span><br><span class="line">          for pwds in pf:</span><br><span class="line">            pwd = pwds.rstrip()    #rstrip()去掉右边的空格</span><br><span class="line">            t = threading.Thread(target=pwdscan, args=(hostname, user, pwd)) #创建多线程</span><br><span class="line">            t.start()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">        main(&#x27;192.168.244.152&#x27;, &#x27;Administrator&#x27;)  #输入ip和用户名（这里我自己搭了个ftp服务器，后面我会说明）</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdoo.png">我直接在这个目录下创建了密码文件</p>
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/audyafafyfff.png"></p>
-<p>里面长这样，这里是我直接输入的，你们也可以网上去找比较全的密码文件，注意，每个密码后面全是空格，所以需要用到rstrip()函数去掉右边的空格</p>
-<h1 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">import ftplib</span><br><span class="line">import time</span><br><span class="line">import threading</span><br><span class="line"></span><br><span class="line">locka = threading.Lock()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def anonscan(hostname): #匿名扫描</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp: #创建ftp对象</span><br><span class="line">            ftp.login()</span><br><span class="line">            print(&quot;[*]&quot;+str(hostname)+&quot;ftp匿名登录成功&quot;)</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line">        print(&#x27;[*]&#x27;+str(hostname)+&quot;:ftp匿名登录失败&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def pwdscan(hostname, user, pwd):  #暴力破解</span><br><span class="line">    try:</span><br><span class="line">        with ftplib.FTP(hostname) as ftp:</span><br><span class="line">            ftp.login(user, pwd)</span><br><span class="line">            locka.acquire()</span><br><span class="line">            print(&#x27;[*]&#x27;+str(hostname)+&#x27;:破解成功&#x27;+&#x27;账号:&#x27;+str(user)+&#x27;密码:&#x27;+str(pwd))</span><br><span class="line">            locka.release()</span><br><span class="line">            return True</span><br><span class="line">    except:</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def main(hostname,user):  #多线程执行暴力破解</span><br><span class="line">    if anonscan(hostname):</span><br><span class="line">        pass</span><br><span class="line">    else:</span><br><span class="line">       with open(&#x27;pwd.txt&#x27;, &#x27;r&#x27;) as pf:</span><br><span class="line">          for pwds in pf:</span><br><span class="line">            pwd = pwds.rstrip()</span><br><span class="line">            t = threading.Thread(target=pwdscan, args=(hostname, user, pwd))</span><br><span class="line">            t.start()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">        main(&#x27;192.168.244.152&#x27;, &#x27;Administrator&#x27;)</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h1 id="运行实例"><a href="#运行实例" class="headerlink" title="运行实例"></a><strong>运行实例</strong></h1><p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdsadasddwqe.png"></p>
-<p>这里我自己在vm搭了一个ftp的服务器，且允许匿名连接</p>
-<p>vm的ftp服务器搭建可以去这里：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Modas/article/details/123401401">在 VMware 虚拟机中搭建 FTP 服务器 (详细)_Modas的博客-CSDN博客_虚拟机搭建ftp服务器</a></p>
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdasdfvvvvv.png"></p>
-<p>运行代码，显示匿名登录成功，接着试试暴力破解</p>
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/20220902115930.jpg"></p>
-<p>首先关闭匿名连接，然后点击运行程序</p>
-<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdrtttt.png"></p>
-<p>可以看到暴力破解成功。</p>
-<p>最后提一点，然后不想自己搭建ftp服务器，可以自己去shadon搜索开启了ftp服务的ip，但是这样就不能保证是匿名连接，或者暴力破解的密码正确（shadon网址<a target="_blank" rel="noopener" href="https://www.shodan.io/%EF%BC%89">https://www.shodan.io/）</a></p>
-<p>希望这篇文章对你有所帮助</p>
-<p>————————————————————————————————————————————</p>
-<p>ftplib库借鉴文章：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/8e645e6de8bf">浅谈Python中ftplib模块 - 简书 (jianshu.com)</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -2386,7 +2402,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
