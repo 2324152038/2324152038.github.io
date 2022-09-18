@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="预防跨站脚本现在的网站包含大量的动态内容以提高用户体验，比过去要复杂得多。所谓动态内容，就是根据用户环境和需要，Web 应用程序能够输出相应的内容。动态站点会受到一种名为 “跨站脚本攻击”（Cross Site Scripting, 安全专家们通常将其缩写成 XSS）的威胁，而静态站点则完全不受其影响。 攻击者通常会在有漏洞的程序中插入 JavaScript、VBScript、 ActiveX 或">
+<meta property="og:type" content="article">
+<meta property="og:title" content="9.预防跨站脚本和处理文件上传">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="预防跨站脚本现在的网站包含大量的动态内容以提高用户体验，比过去要复杂得多。所谓动态内容，就是根据用户环境和需要，Web 应用程序能够输出相应的内容。动态站点会受到一种名为 “跨站脚本攻击”（Cross Site Scripting, 安全专家们通常将其缩写成 XSS）的威胁，而静态站点则完全不受其影响。 攻击者通常会在有漏洞的程序中插入 JavaScript、VBScript、 ActiveX 或">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.learnku.com/build-web-application-with-golang/images/4.5.upload2.png?raw=true">
+<meta property="article:published_time" content="2022-09-18T00:57:09.000Z">
+<meta property="article:modified_time" content="2022-09-18T01:16:10.587Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.learnku.com/build-web-application-with-golang/images/4.5.upload2.png?raw=true">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>9.预防跨站脚本和处理文件上传 | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          9.预防跨站脚本和处理文件上传
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-18 08:57:09 / 修改时间：09:16:10" itemprop="dateCreated datePublished" datetime="2022-09-18T08:57:09+08:00">2022-09-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="预防跨站脚本"><a href="#预防跨站脚本" class="headerlink" title="预防跨站脚本"></a>预防跨站脚本</h1><p>现在的网站包含大量的动态内容以提高用户体验，比过去要复杂得多。所谓动态内容，就是根据用户环境和需要，Web 应用程序能够输出相应的内容。动态站点会受到一种名为 “跨站脚本攻击”（Cross Site Scripting, 安全专家们通常将其缩写成 XSS）的威胁，而静态站点则完全不受其影响。</p>
+<p>攻击者通常会在有漏洞的程序中插入 JavaScript、VBScript、 ActiveX 或 Flash 以欺骗用户。一旦得手，他们可以盗取用户帐户信息，修改用户设置，盗取 &#x2F; 污染 cookie 和植入恶意广告等。</p>
+<p>对 XSS 最佳的防护应该结合以下两种方法：一是验证所有输入数据，有效检测攻击 (这个我们前面小节已经有过介绍); 另一个是对所有输出数据进行适当的处理，以防止任何已成功注入的脚本在浏览器端运行。</p>
+<p>那么 Go 里面是怎么做这个有效防护的呢？Go 的 html&#x2F;template 里面带有下面几个函数可以帮你转义</p>
+<p>func HTMLEscape (w io.Writer, b [] byte) &#x2F;&#x2F; 把 b 进行转义之后写到 w<br>func HTMLEscapeString (s string) string &#x2F;&#x2F; 转义 s 之后返回结果字符串<br>func HTMLEscaper (args …interface {}) string &#x2F;&#x2F; 支持多个参数一起转义，返回结果字符串<br>我们看 4.1 小节的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(<span class="string">&quot;username:&quot;</span>, template.HTMLEscapeString(r.Form.Get(<span class="string">&quot;username&quot;</span>))) <span class="comment">// 输出到服务器端</span></span><br><span class="line">fmt.Println(<span class="string">&quot;password:&quot;</span>, template.HTMLEscapeString(r.Form.Get(<span class="string">&quot;password&quot;</span>)))</span><br><span class="line">template.HTMLEscape(w, []<span class="type">byte</span>(r.Form.Get(<span class="string">&quot;username&quot;</span>))) <span class="comment">// 输出到客户端</span></span><br></pre></td></tr></table></figure>
+
+<p>如果我们输入的 username 是 <code>&lt;script&gt;alert()&lt;/script&gt;</code>, 那么我们可以在浏览器上面看到输出如下所示：</p>
+<p>图 4.3 Javascript 过滤之后的输出</p>
+<p>Go 的 html&#x2F;template 包默认帮你过滤了 html 标签，但是有时候你只想要输出这个</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;alert()&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>  看起来正常的信息，该怎么处理？请使用 text&#x2F;template。请看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;text/template&quot;</span></span><br><span class="line">...</span><br><span class="line">t, err := template.New(<span class="string">&quot;foo&quot;</span>).Parse(<span class="string">`&#123;&#123;define &quot;T&quot;&#125;&#125;Hello, &#123;&#123;.&#125;&#125;!&#123;&#123;end&#125;&#125;`</span>)</span><br><span class="line">err = t.ExecuteTemplate(out, <span class="string">&quot;T&quot;</span>, <span class="string">&quot;&lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hello, &lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;!</span><br></pre></td></tr></table></figure>
+
+<p>或者使用 template.HTML 类型</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;html/template&quot;</span></span><br><span class="line">...</span><br><span class="line">t, err := template.New(<span class="string">&quot;foo&quot;</span>).Parse(<span class="string">`&#123;&#123;define &quot;T&quot;&#125;&#125;Hello, &#123;&#123;.&#125;&#125;!&#123;&#123;end&#125;&#125;`</span>)</span><br><span class="line">err = t.ExecuteTemplate(out, <span class="string">&quot;T&quot;</span>, template.HTML(<span class="string">&quot;&lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hello, &lt;script&gt;<span class="title function_ invoke__">alert</span>(<span class="string">&#x27;you have been pwned&#x27;</span>)&lt;/script&gt;!</span><br></pre></td></tr></table></figure>
+
+<h1 id="处理文件上传"><a href="#处理文件上传" class="headerlink" title="处理文件上传"></a>处理文件上传</h1><p>你想处理一个由用户上传的文件，比如你正在建设一个类似 Instagram 的网站，你需要存储用户拍摄的照片。这种需求该如何实现呢？</p>
+<p>要使表单能够上传文件，首先第一步就是要添加 form 的 enctype 属性，enctype 属性有如下三种情况:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">application/x-www-form-urlencoded   表示在发送前编码所有字符（默认）</span><br><span class="line">multipart/form-data   不对字符编码。在使用包含文件上传控件的表单时，必须使用该值。</span><br><span class="line">text/plain    空格转换为 &quot;+&quot; 加号，但不对特殊字符编码。</span><br></pre></td></tr></table></figure>
+
+<p>所以，创建新的表单 html 文件，命名为 upload.gtpl, html 代码应该类似于:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>上传文件<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">enctype</span>=<span class="string">&quot;multipart/form-data&quot;</span> <span class="attr">action</span>=<span class="string">&quot;/upload&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;file&quot;</span> <span class="attr">name</span>=<span class="string">&quot;uploadfile&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;token&quot;</span> <span class="attr">value</span>=<span class="string">&quot;&#123;&#123;.&#125;&#125;&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;upload&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在服务器端，我们增加一个 handlerFunc:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">http.HandleFunc(<span class="string">&quot;/upload&quot;</span>, upload)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 处理 /upload  逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">upload</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;method:&quot;</span>, r.Method) <span class="comment">// 获取请求的方法</span></span><br><span class="line">    <span class="keyword">if</span> r.Method == <span class="string">&quot;GET&quot;</span> &#123;</span><br><span class="line">        crutime := time.Now().Unix()</span><br><span class="line">        h := md5.New()</span><br><span class="line">        io.WriteString(h, strconv.FormatInt(crutime, <span class="number">10</span>))</span><br><span class="line">        token := fmt.Sprintf(<span class="string">&quot;%x&quot;</span>, h.Sum(<span class="literal">nil</span>))</span><br><span class="line"></span><br><span class="line">        t, _ := template.ParseFiles(<span class="string">&quot;upload.gtpl&quot;</span>)</span><br><span class="line">        t.Execute(w, token)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        r.ParseMultipartForm(<span class="number">32</span> &lt;&lt; <span class="number">20</span>)</span><br><span class="line">        file, handler, err := r.FormFile(<span class="string">&quot;uploadfile&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Println(err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">defer</span> file.Close()</span><br><span class="line">        fmt.Fprintf(w, <span class="string">&quot;%v&quot;</span>, handler.Header)</span><br><span class="line">        f, err := os.OpenFile(<span class="string">&quot;./test/&quot;</span>+handler.Filename, os.O_WRONLY|os.O_CREATE, <span class="number">0666</span>)  <span class="comment">// 此处假设当前目录下已存在test目录</span></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Println(err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">defer</span> f.Close()</span><br><span class="line">        io.Copy(f, file)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码可以看到，处理文件上传我们需要调用 r.ParseMultipartForm，里面的参数表示 maxMemory，调用 ParseMultipartForm 之后，上传的文件存储在 maxMemory 大小的内存里面，如果文件大小超过了 maxMemory，那么剩下的部分将存储在系统的临时文件中。我们可以通过 r.FormFile 获取上面的文件句柄，然后实例中使用了 io.Copy 来存储文件。</p>
+<p>过上面的实例我们可以看到我们上传文件主要三步处理：</p>
+<p>表单中增加 enctype&#x3D;”multipart&#x2F;form-data”<br>服务端调用 r.ParseMultipartForm, 把上传的文件存储在内存和临时文件中<br>使用 r.FormFile 获取文件句柄，然后对文件进行存储等处理。</p>
+<p>文件 handler 是 multipart.FileHeader, 里面存储了如下结构信息</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FileHeader <span class="keyword">struct</span> &#123;</span><br><span class="line">    Filename <span class="type">string</span></span><br><span class="line">    Header   textproto.MIMEHeader</span><br><span class="line">    <span class="comment">// contains filtered or unexported fields</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>们通过上面的实例代码打印出来上传文件的信息如下</p>
+<p><img src="https://cdn.learnku.com/build-web-application-with-golang/images/4.5.upload2.png?raw=true" alt="img"></p>
+<p>图 4.5 打印文件上传后服务器端接受的信息</p>
+<h2 id="客户端上传文件"><a href="#客户端上传文件" class="headerlink" title="客户端上传文件"></a>客户端上传文件</h2><p>我们上面的例子演示了如何通过表单上传文件，然后在服务器端处理文件，其实 Go 支持模拟客户端表单功能支持文件上传，详细用法请看如下示例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;bytes&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;io&quot;</span></span><br><span class="line">    <span class="string">&quot;io/ioutil&quot;</span></span><br><span class="line">    <span class="string">&quot;mime/multipart&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">postFile</span><span class="params">(filename <span class="type">string</span>, targetUrl <span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    bodyBuf := &amp;bytes.Buffer&#123;&#125;</span><br><span class="line">    bodyWriter := multipart.NewWriter(bodyBuf)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键的一步操作</span></span><br><span class="line">    fileWriter, err := bodyWriter.CreateFormFile(<span class="string">&quot;uploadfile&quot;</span>, filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;error writing to buffer&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 打开文件句柄操作</span></span><br><span class="line">    fh, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;error opening file&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> fh.Close()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// iocopy</span></span><br><span class="line">    _, err = io.Copy(fileWriter, fh)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    contentType := bodyWriter.FormDataContentType()</span><br><span class="line">    bodyWriter.Close()</span><br><span class="line"></span><br><span class="line">    resp, err := http.Post(targetUrl, contentType, bodyBuf)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line">    resp_body, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(resp.Status)</span><br><span class="line">    fmt.Println(<span class="type">string</span>(resp_body))</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// sample usage</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    target_url := <span class="string">&quot;http://localhost:9090/upload&quot;</span></span><br><span class="line">    filename := <span class="string">&quot;./astaxie.pdf&quot;</span></span><br><span class="line">    postFile(filename, target_url)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>面的例子详细展示了客户端如何向服务器上传一个文件的例子，客户端通过 multipart.Write 把文件的文本流写入一个缓存中，然后调用 http 的 Post 方法把缓存传到服务器。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/17/8-%E8%A1%A8%E5%8D%95%E7%9A%84%E8%BE%93%E5%85%A5/" rel="prev" title="8.表单的输入与验证">
+      <i class="fa fa-chevron-left"></i> 8.表单的输入与验证
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC"><span class="nav-number">1.</span> <span class="nav-text">预防跨站脚本</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">2.</span> <span class="nav-text">处理文件上传</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%B8%8A%E4%BC%A0%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">客户端上传文件</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

@@ -157,6 +157,469 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" class="post-title-link" itemprop="url">9.预防跨站脚本和处理文件上传</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-18 08:57:09 / 修改时间：09:16:10" itemprop="dateCreated datePublished" datetime="2022-09-18T08:57:09+08:00">2022-09-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="预防跨站脚本"><a href="#预防跨站脚本" class="headerlink" title="预防跨站脚本"></a>预防跨站脚本</h1><p>现在的网站包含大量的动态内容以提高用户体验，比过去要复杂得多。所谓动态内容，就是根据用户环境和需要，Web 应用程序能够输出相应的内容。动态站点会受到一种名为 “跨站脚本攻击”（Cross Site Scripting, 安全专家们通常将其缩写成 XSS）的威胁，而静态站点则完全不受其影响。</p>
+<p>攻击者通常会在有漏洞的程序中插入 JavaScript、VBScript、 ActiveX 或 Flash 以欺骗用户。一旦得手，他们可以盗取用户帐户信息，修改用户设置，盗取 &#x2F; 污染 cookie 和植入恶意广告等。</p>
+<p>对 XSS 最佳的防护应该结合以下两种方法：一是验证所有输入数据，有效检测攻击 (这个我们前面小节已经有过介绍); 另一个是对所有输出数据进行适当的处理，以防止任何已成功注入的脚本在浏览器端运行。</p>
+<p>那么 Go 里面是怎么做这个有效防护的呢？Go 的 html&#x2F;template 里面带有下面几个函数可以帮你转义</p>
+<p>func HTMLEscape (w io.Writer, b [] byte) &#x2F;&#x2F; 把 b 进行转义之后写到 w<br>func HTMLEscapeString (s string) string &#x2F;&#x2F; 转义 s 之后返回结果字符串<br>func HTMLEscaper (args …interface {}) string &#x2F;&#x2F; 支持多个参数一起转义，返回结果字符串<br>我们看 4.1 小节的例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(<span class="string">&quot;username:&quot;</span>, template.HTMLEscapeString(r.Form.Get(<span class="string">&quot;username&quot;</span>))) <span class="comment">// 输出到服务器端</span></span><br><span class="line">fmt.Println(<span class="string">&quot;password:&quot;</span>, template.HTMLEscapeString(r.Form.Get(<span class="string">&quot;password&quot;</span>)))</span><br><span class="line">template.HTMLEscape(w, []<span class="type">byte</span>(r.Form.Get(<span class="string">&quot;username&quot;</span>))) <span class="comment">// 输出到客户端</span></span><br></pre></td></tr></table></figure>
+
+<p>如果我们输入的 username 是 <code>&lt;script&gt;alert()&lt;/script&gt;</code>, 那么我们可以在浏览器上面看到输出如下所示：</p>
+<p>图 4.3 Javascript 过滤之后的输出</p>
+<p>Go 的 html&#x2F;template 包默认帮你过滤了 html 标签，但是有时候你只想要输出这个</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;alert()&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>  看起来正常的信息，该怎么处理？请使用 text&#x2F;template。请看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;text/template&quot;</span></span><br><span class="line">...</span><br><span class="line">t, err := template.New(<span class="string">&quot;foo&quot;</span>).Parse(<span class="string">`&#123;&#123;define &quot;T&quot;&#125;&#125;Hello, &#123;&#123;.&#125;&#125;!&#123;&#123;end&#125;&#125;`</span>)</span><br><span class="line">err = t.ExecuteTemplate(out, <span class="string">&quot;T&quot;</span>, <span class="string">&quot;&lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hello, &lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;!</span><br></pre></td></tr></table></figure>
+
+<p>或者使用 template.HTML 类型</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;html/template&quot;</span></span><br><span class="line">...</span><br><span class="line">t, err := template.New(<span class="string">&quot;foo&quot;</span>).Parse(<span class="string">`&#123;&#123;define &quot;T&quot;&#125;&#125;Hello, &#123;&#123;.&#125;&#125;!&#123;&#123;end&#125;&#125;`</span>)</span><br><span class="line">err = t.ExecuteTemplate(out, <span class="string">&quot;T&quot;</span>, template.HTML(<span class="string">&quot;&lt;script&gt;alert(&#x27;you have been pwned&#x27;)&lt;/script&gt;&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Hello, &lt;script&gt;<span class="title function_ invoke__">alert</span>(<span class="string">&#x27;you have been pwned&#x27;</span>)&lt;/script&gt;!</span><br></pre></td></tr></table></figure>
+
+<h1 id="处理文件上传"><a href="#处理文件上传" class="headerlink" title="处理文件上传"></a>处理文件上传</h1><p>你想处理一个由用户上传的文件，比如你正在建设一个类似 Instagram 的网站，你需要存储用户拍摄的照片。这种需求该如何实现呢？</p>
+<p>要使表单能够上传文件，首先第一步就是要添加 form 的 enctype 属性，enctype 属性有如下三种情况:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">application/x-www-form-urlencoded   表示在发送前编码所有字符（默认）</span><br><span class="line">multipart/form-data   不对字符编码。在使用包含文件上传控件的表单时，必须使用该值。</span><br><span class="line">text/plain    空格转换为 &quot;+&quot; 加号，但不对特殊字符编码。</span><br></pre></td></tr></table></figure>
+
+<p>所以，创建新的表单 html 文件，命名为 upload.gtpl, html 代码应该类似于:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>上传文件<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">enctype</span>=<span class="string">&quot;multipart/form-data&quot;</span> <span class="attr">action</span>=<span class="string">&quot;/upload&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;file&quot;</span> <span class="attr">name</span>=<span class="string">&quot;uploadfile&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;token&quot;</span> <span class="attr">value</span>=<span class="string">&quot;&#123;&#123;.&#125;&#125;&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;upload&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在服务器端，我们增加一个 handlerFunc:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">http.HandleFunc(<span class="string">&quot;/upload&quot;</span>, upload)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 处理 /upload  逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">upload</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;method:&quot;</span>, r.Method) <span class="comment">// 获取请求的方法</span></span><br><span class="line">    <span class="keyword">if</span> r.Method == <span class="string">&quot;GET&quot;</span> &#123;</span><br><span class="line">        crutime := time.Now().Unix()</span><br><span class="line">        h := md5.New()</span><br><span class="line">        io.WriteString(h, strconv.FormatInt(crutime, <span class="number">10</span>))</span><br><span class="line">        token := fmt.Sprintf(<span class="string">&quot;%x&quot;</span>, h.Sum(<span class="literal">nil</span>))</span><br><span class="line"></span><br><span class="line">        t, _ := template.ParseFiles(<span class="string">&quot;upload.gtpl&quot;</span>)</span><br><span class="line">        t.Execute(w, token)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        r.ParseMultipartForm(<span class="number">32</span> &lt;&lt; <span class="number">20</span>)</span><br><span class="line">        file, handler, err := r.FormFile(<span class="string">&quot;uploadfile&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Println(err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">defer</span> file.Close()</span><br><span class="line">        fmt.Fprintf(w, <span class="string">&quot;%v&quot;</span>, handler.Header)</span><br><span class="line">        f, err := os.OpenFile(<span class="string">&quot;./test/&quot;</span>+handler.Filename, os.O_WRONLY|os.O_CREATE, <span class="number">0666</span>)  <span class="comment">// 此处假设当前目录下已存在test目录</span></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Println(err)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">defer</span> f.Close()</span><br><span class="line">        io.Copy(f, file)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码可以看到，处理文件上传我们需要调用 r.ParseMultipartForm，里面的参数表示 maxMemory，调用 ParseMultipartForm 之后，上传的文件存储在 maxMemory 大小的内存里面，如果文件大小超过了 maxMemory，那么剩下的部分将存储在系统的临时文件中。我们可以通过 r.FormFile 获取上面的文件句柄，然后实例中使用了 io.Copy 来存储文件。</p>
+<p>过上面的实例我们可以看到我们上传文件主要三步处理：</p>
+<p>表单中增加 enctype&#x3D;”multipart&#x2F;form-data”<br>服务端调用 r.ParseMultipartForm, 把上传的文件存储在内存和临时文件中<br>使用 r.FormFile 获取文件句柄，然后对文件进行存储等处理。</p>
+<p>文件 handler 是 multipart.FileHeader, 里面存储了如下结构信息</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FileHeader <span class="keyword">struct</span> &#123;</span><br><span class="line">    Filename <span class="type">string</span></span><br><span class="line">    Header   textproto.MIMEHeader</span><br><span class="line">    <span class="comment">// contains filtered or unexported fields</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>们通过上面的实例代码打印出来上传文件的信息如下</p>
+<p><img src="https://cdn.learnku.com/build-web-application-with-golang/images/4.5.upload2.png?raw=true" alt="img"></p>
+<p>图 4.5 打印文件上传后服务器端接受的信息</p>
+<h2 id="客户端上传文件"><a href="#客户端上传文件" class="headerlink" title="客户端上传文件"></a>客户端上传文件</h2><p>我们上面的例子演示了如何通过表单上传文件，然后在服务器端处理文件，其实 Go 支持模拟客户端表单功能支持文件上传，详细用法请看如下示例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;bytes&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;io&quot;</span></span><br><span class="line">    <span class="string">&quot;io/ioutil&quot;</span></span><br><span class="line">    <span class="string">&quot;mime/multipart&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">postFile</span><span class="params">(filename <span class="type">string</span>, targetUrl <span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    bodyBuf := &amp;bytes.Buffer&#123;&#125;</span><br><span class="line">    bodyWriter := multipart.NewWriter(bodyBuf)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键的一步操作</span></span><br><span class="line">    fileWriter, err := bodyWriter.CreateFormFile(<span class="string">&quot;uploadfile&quot;</span>, filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;error writing to buffer&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 打开文件句柄操作</span></span><br><span class="line">    fh, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;error opening file&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> fh.Close()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// iocopy</span></span><br><span class="line">    _, err = io.Copy(fileWriter, fh)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    contentType := bodyWriter.FormDataContentType()</span><br><span class="line">    bodyWriter.Close()</span><br><span class="line"></span><br><span class="line">    resp, err := http.Post(targetUrl, contentType, bodyBuf)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> resp.Body.Close()</span><br><span class="line">    resp_body, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(resp.Status)</span><br><span class="line">    fmt.Println(<span class="type">string</span>(resp_body))</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// sample usage</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    target_url := <span class="string">&quot;http://localhost:9090/upload&quot;</span></span><br><span class="line">    filename := <span class="string">&quot;./astaxie.pdf&quot;</span></span><br><span class="line">    postFile(filename, target_url)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>面的例子详细展示了客户端如何向服务器上传一个文件的例子，客户端通过 multipart.Write 把文件的文本流写入一个缓存中，然后调用 http 的 Post 方法把缓存传到服务器。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/17/8-%E8%A1%A8%E5%8D%95%E7%9A%84%E8%BE%93%E5%85%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/17/8-%E8%A1%A8%E5%8D%95%E7%9A%84%E8%BE%93%E5%85%A5/" class="post-title-link" itemprop="url">8.表单的输入与验证</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-09-17 12:40:30" itemprop="dateCreated datePublished" datetime="2022-09-17T12:40:30+08:00">2022-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-09-18 08:54:13" itemprop="dateModified" datetime="2022-09-18T08:54:13+08:00">2022-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="处理表单的输入"><a href="#处理表单的输入" class="headerlink" title="处理表单的输入"></a>处理表单的输入</h1><p>先来看一个表单递交的例子，我们有如下的表单内容，命名成文件 login.gtpl (放入当前新建项目的目录里面)</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;/login&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">    用户名:<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;username&quot;</span>&gt;</span></span><br><span class="line">    密码:<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;password&quot;</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;登录&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>上面递交表单到服务器的 &#x2F;login，当用户输入信息点击登录之后，会跳转到服务器的路由 login 里面，我们首先要判断这个是什么方式传递过来，POST 还是 GET 呢？</p>
+<p>http 包里面有一个很简单的方式就可以获取，我们在前面 web 的例子的基础上来看看怎么处理 login 页面的 form 数据</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;html/template&quot;</span></span><br><span class="line">    <span class="string">&quot;log&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;strings&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sayhelloName</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    r.ParseForm()       <span class="comment">// 解析 url 传递的参数，对于 POST 则解析响应包的主体（request body）</span></span><br><span class="line">    <span class="comment">// 注意:如果没有调用 ParseForm 方法，下面无法获取表单的数据</span></span><br><span class="line">    fmt.Println(r.Form) <span class="comment">// 这些信息是输出到服务器端的打印信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;path&quot;</span>, r.URL.Path)</span><br><span class="line">    fmt.Println(<span class="string">&quot;scheme&quot;</span>, r.URL.Scheme)</span><br><span class="line">    fmt.Println(r.Form[<span class="string">&quot;url_long&quot;</span>])</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> r.Form &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;key:&quot;</span>, k)</span><br><span class="line">        fmt.Println(<span class="string">&quot;val:&quot;</span>, strings.Join(v, <span class="string">&quot;&quot;</span>))</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Fprintf(w, <span class="string">&quot;Hello astaxie!&quot;</span>) <span class="comment">// 这个写入到 w 的是输出到客户端的</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">login</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;method:&quot;</span>, r.Method) <span class="comment">// 获取请求的方法</span></span><br><span class="line">    <span class="keyword">if</span> r.Method == <span class="string">&quot;GET&quot;</span> &#123;</span><br><span class="line">        t, _ := template.ParseFiles(<span class="string">&quot;login.gtpl&quot;</span>)</span><br><span class="line">        log.Println(t.Execute(w, <span class="literal">nil</span>))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        err := r.ParseForm()   <span class="comment">// 解析 url 传递的参数，对于 POST 则解析响应包的主体（request body）</span></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">           <span class="comment">// handle error http.Error() for example</span></span><br><span class="line">          log.Fatal(<span class="string">&quot;ParseForm: &quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 请求的是登录数据，那么执行登录的逻辑判断</span></span><br><span class="line">        fmt.Println(<span class="string">&quot;username:&quot;</span>, r.Form[<span class="string">&quot;username&quot;</span>])</span><br><span class="line">        fmt.Println(<span class="string">&quot;password:&quot;</span>, r.Form[<span class="string">&quot;password&quot;</span>])</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/&quot;</span>, sayhelloName)       <span class="comment">// 设置访问的路由</span></span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/login&quot;</span>, login)         <span class="comment">// 设置访问的路由</span></span><br><span class="line">    err := http.ListenAndServe(<span class="string">&quot;:9090&quot;</span>, <span class="literal">nil</span>) <span class="comment">// 设置监听的端口</span></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(<span class="string">&quot;ListenAndServe: &quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码我们可以看出获取请求方法是通过 r.Method 来完成的，这是个字符串类型的变量，返回 GET, POST, PUT 等 method 信息。</p>
+<p>login 函数中我们根据 r.Method 来判断是显示登录界面还是处理登录逻辑。当 GET 方式请求时显示登录界面，其他方式请求时则处理登录逻辑，如查询数据库、验证登录信息等。</p>
+<p>我们输入用户名和密码之后发现在服务器端是不会打印出来任何输出的，为什么呢？默认情况下，Handler 里面是不会自动解析 form 的，必须显式的调用 r.ParseForm() 后，你才能对这个表单数据进行操作。我们修改一下代码，在 fmt.Println(“username:”, r.Form[“username”]) 之前加一行 r.ParseForm(), 重新编译，再次测试输入递交，现在是不是在服务器端有输出你的输入的用户名和密码了。</p>
+<p>r.Form 里面包含了所有请求的参数，比如 URL 中 query-string、POST 的数据、PUT 的数据，所以当你在 URL 中的 query-string 字段和 POST 冲突时，会保存成一个 slice，里面存储了多个值，Go 官方文档中说在接下来的版本里面将会把 POST、GET 这些数据分离开来。</p>
+<p>现在我们修改一下 login.gtpl 里面 form 的 action 值 <a target="_blank" rel="noopener" href="http://127.0.0.1:9090/login">http://127.0.0.1:9090/login</a> 修改为 <a target="_blank" rel="noopener" href="http://127.0.0.1:9090/login?username=astaxie%EF%BC%8C%E5%86%8D%E6%AC%A1%E6%B5%8B%E8%AF%95%EF%BC%8C%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E8%BE%93%E5%87%BA">http://127.0.0.1:9090/login?username=astaxie，再次测试，服务器的输出</a> username 是不是一个 slice。</p>
+<p><code>request.Form</code> 是一个 url.Values 类型，里面存储的是对应的类似 <code>key=value</code> 的信息，下面展示了可以对 form 数据进行的一些操作:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">v := url.Values&#123;&#125;</span><br><span class="line">v.Set(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;Ava&quot;</span>)</span><br><span class="line">v.Add(<span class="string">&quot;friend&quot;</span>, <span class="string">&quot;Jess&quot;</span>)</span><br><span class="line">v.Add(<span class="string">&quot;friend&quot;</span>, <span class="string">&quot;Sarah&quot;</span>)</span><br><span class="line">v.Add(<span class="string">&quot;friend&quot;</span>, <span class="string">&quot;Zoe&quot;</span>)</span><br><span class="line"><span class="comment">// v.Encode() == &quot;name=Ava&amp;friend=Jess&amp;friend=Sarah&amp;friend=Zoe&quot;</span></span><br><span class="line">fmt.Println(v.Get(<span class="string">&quot;name&quot;</span>))</span><br><span class="line">fmt.Println(v.Get(<span class="string">&quot;friend&quot;</span>))</span><br><span class="line">fmt.Println(v[<span class="string">&quot;friend&quot;</span>])</span><br></pre></td></tr></table></figure>
+
+<h1 id="验证表单的输入"><a href="#验证表单的输入" class="headerlink" title="验证表单的输入"></a>验证表单的输入</h1><p>我们平常编写 Web 应用主要有两方面的数据验证，一个是在页面端的 js 验证 (目前在这方面有很多的插件库，比如 ValidationJS 插件)，一个是在服务器端的验证，我们这小节讲解的是如何在服务器端验证。</p>
+<h2 id="必填字段"><a href="#必填字段" class="headerlink" title="必填字段"></a>必填字段</h2><p>你想要确保从一个表单元素中得到一个值，例如前面小节里面的用户名，我们如何处理呢？Go 有一个内置函数 <code>len</code> 可以获取字符串的长度，这样我们就可以通过 len 来获取数据的长度，例如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(r.Form[<span class="string">&quot;username&quot;</span>][<span class="number">0</span>])==<span class="number">0</span>&#123;</span><br><span class="line">    <span class="comment">// 为空的处理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>r.Form 对不同类型的表单元素的留空有不同的处理， 对于空文本框、空文本区域以及文件上传，元素的值为空值，而如果是未选中的复选框和单选按钮，则根本不会在 r.Form 中产生相应条目，如果我们用上面例子中的方式去获取数据时程序就会报错。所以我们需要通过 r.Form.Get() 来获取值，因为如果字段不存在，通过该方式获取的是空值。但是通过 r.Form.Get() 只能获取单个的值，如果是 map 的值，必须通过上面的方式来获取。</p>
+<h2 id="数字"><a href="#数字" class="headerlink" title="数字"></a>数字</h2><p>你想要确保一个表单输入框中获取的只能是数字，例如，你想通过表单获取某个人的具体年龄是 50 岁还是 10 岁，而不是像 “一把年纪了” 或 “年轻着呢” 这种描述</p>
+<p>如果我们是判断正整数，那么我们先转化成 int 类型，然后进行处理</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">getint,err:=strconv.Atoi(r.Form.Get(<span class="string">&quot;age&quot;</span>))</span><br><span class="line"><span class="keyword">if</span> err!=<span class="literal">nil</span>&#123;</span><br><span class="line">    <span class="comment">// 数字转化出错了，那么可能就不是数字</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 接下来就可以判断这个数字的大小范围了</span></span><br><span class="line"><span class="keyword">if</span> getint &gt;<span class="number">100</span> &#123;</span><br><span class="line">    <span class="comment">// 太大了</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="中文"><a href="#中文" class="headerlink" title="中文"></a>中文</h2><p>时候我们想通过表单元素获取一个用户的中文名字，但是又为了保证获取的是正确的中文，我们需要进行验证，而不是用户随便的一些输入。对于中文我们目前有两种方式来验证，可以使用 unicode 包提供的 func Is(rangeTab *RangeTable, r rune) bool 来验证，也可以使用正则方式来验证，这里使用最简单的正则方式，如下代码所示</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> m, _ := regexp.MatchString(<span class="string">&quot;^\\p&#123;Han&#125;+$&quot;</span>, r.Form.Get(<span class="string">&quot;realname&quot;</span>)); !m &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="英文"><a href="#英文" class="headerlink" title="英文"></a>英文</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> m, _ := regexp.MatchString(<span class="string">`^([\w\.\_]&#123;2,10&#125;)@(\w&#123;1,&#125;)\.([a-z]&#123;2,4&#125;)$`</span>, r.Form.Get(<span class="string">&quot;email&quot;</span>)); !m &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;no&quot;</span>)</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;yes&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="手机号码"><a href="#手机号码" class="headerlink" title="手机号码"></a>手机号码</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> m, _ := regexp.MatchString(<span class="string">`^(1[3|4|5|8][0-9]\d&#123;4,8&#125;)$`</span>, r.Form.Get(<span class="string">&quot;mobile&quot;</span>)); !m &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="下拉菜单"><a href="#下拉菜单" class="headerlink" title="下拉菜单"></a>下拉菜单</h2><p>如果我们想要判断表单里面 select 元素生成的下拉菜单中是否有被选中的项目。有些时候黑客可能会伪造这个下拉菜单不存在的值发送给你，那么如何判断这个值是否是我们预设的值呢？</p>
+<p>我们的 select 可能是这样的一些元素</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">name</span>=<span class="string">&quot;fruit&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">option</span> <span class="attr">value</span>=<span class="string">&quot;apple&quot;</span>&gt;</span>apple<span class="tag">&lt;/<span class="name">option</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">option</span> <span class="attr">value</span>=<span class="string">&quot;pear&quot;</span>&gt;</span>pear<span class="tag">&lt;/<span class="name">option</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">option</span> <span class="attr">value</span>=<span class="string">&quot;banana&quot;</span>&gt;</span>banana<span class="tag">&lt;/<span class="name">option</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>那么我们可以这样来验证</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">slice:=[]string&#123;&quot;apple&quot;,&quot;pear&quot;,&quot;banana&quot;&#125;</span><br><span class="line"></span><br><span class="line">v := r.Form.Get(&quot;fruit&quot;)</span><br><span class="line">for _, item := range slice &#123;</span><br><span class="line">    if item == v &#123;</span><br><span class="line">        return true</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">return false</span><br></pre></td></tr></table></figure>
+
+<h2 id="单选按钮"><a href="#单选按钮" class="headerlink" title="单选按钮"></a>单选按钮</h2><p>如果我们想要判断 radio 按钮是否有一个被选中了，我们页面的输出可能就是一个男、女性别的选择，但是也可能一个 15 岁大的无聊小孩，一手拿着 http 协议的书，另一只手通过 telnet 客户端向你的程序在发送请求呢，你设定的性别男值是 1，女是 2，他给你发送一个 3，你的程序会出现异常吗？因此我们也需要像下拉菜单的判断方式类似，判断我们获取的值是我们预设的值，而不是额外的值。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;radio&quot;</span> <span class="attr">name</span>=<span class="string">&quot;gender&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span>&gt;</span>男</span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;radio&quot;</span> <span class="attr">name</span>=<span class="string">&quot;gender&quot;</span> <span class="attr">value</span>=<span class="string">&quot;2&quot;</span>&gt;</span>女</span><br></pre></td></tr></table></figure>
+
+<p>那我们也可以类似下拉菜单的做法一样</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">slice:=[]<span class="type">string</span>&#123;<span class="string">&quot;1&quot;</span>,<span class="string">&quot;2&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> _, v := <span class="keyword">range</span> slice &#123;</span><br><span class="line">    <span class="keyword">if</span> v == r.Form.Get(<span class="string">&quot;gender&quot;</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="复选框"><a href="#复选框" class="headerlink" title="复选框"></a>复选框</h2><p>有一项选择兴趣的复选框，你想确定用户选中的和你提供给用户选择的是同一个类型的数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;input <span class="keyword">type</span>=<span class="string">&quot;checkbox&quot;</span> name=<span class="string">&quot;interest&quot;</span> value=<span class="string">&quot;football&quot;</span>&gt;足球</span><br><span class="line">&lt;input <span class="keyword">type</span>=<span class="string">&quot;checkbox&quot;</span> name=<span class="string">&quot;interest&quot;</span> value=<span class="string">&quot;basketball&quot;</span>&gt;篮球</span><br><span class="line">&lt;input <span class="keyword">type</span>=<span class="string">&quot;checkbox&quot;</span> name=<span class="string">&quot;interest&quot;</span> value=<span class="string">&quot;tennis&quot;</span>&gt;网球</span><br></pre></td></tr></table></figure>
+
+<p>对于复选框我们的验证和单选有点不一样，因为接收到的数据是一个 slice</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">slice:=[]<span class="type">string</span>&#123;<span class="string">&quot;football&quot;</span>,<span class="string">&quot;basketball&quot;</span>,<span class="string">&quot;tennis&quot;</span>&#125;</span><br><span class="line">a:=Slice_diff(r.Form[<span class="string">&quot;interest&quot;</span>],slice)</span><br><span class="line"><span class="keyword">if</span> a == <span class="literal">nil</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>上面这个函数 <code>Slice_diff</code> 包含在我开源的一个库里面 (操作 slice 和 map 的库)，</p>
+<h2 id="日期和时间"><a href="#日期和时间" class="headerlink" title="日期和时间"></a>日期和时间</h2><p>你想确定用户填写的日期或时间是否有效。例如<br>，用户在日程表中安排 8 月份的第 45 天开会，或者提供未来的某个时间作为生日。</p>
+<p>Go 里面提供了一个 time 的处理包，我们可以把用户的输入年月日转化成相应的时间，然后进行逻辑判断</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">t := time.Date(<span class="number">2009</span>, time.November, <span class="number">10</span>, <span class="number">23</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, time.Local)</span><br><span class="line">fmt.Printf(<span class="string">&quot;Go launched at %s\n&quot;</span>, t.Local())</span><br></pre></td></tr></table></figure>
+
+<p>获取 time 之后我们就可以进行很多时间函数的操作。具体的判断就根据自己的需求调整。</p>
+<h2 id="身份证号码"><a href="#身份证号码" class="headerlink" title="身份证号码"></a>身份证号码</h2><p>如果我们想验证表单输入的是否是身份证，通过正则也可以方便的验证，但是身份证有 15 位和 18 位，我们两个都需要验证</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 验证 15 位身份证，15 位的是全部数字</span></span><br><span class="line"><span class="keyword">if</span> m, _ := regexp.MatchString(<span class="string">`^(\d&#123;15&#125;)$`</span>, r.Form.Get(<span class="string">&quot;usercard&quot;</span>)); !m &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 验证 18 位身份证，18 位前 17 位为数字，最后一位是校验位，可能为数字或字符 X。</span></span><br><span class="line"><span class="keyword">if</span> m, _ := regexp.MatchString(<span class="string">`^(\d&#123;17&#125;)([0-9]|X)$`</span>, r.Form.Get(<span class="string">&quot;usercard&quot;</span>)); !m &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/041-processing-form-input/3174">04.1. 处理表单的输入 | 第四章. 表单 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/17/7-go%E7%9A%84http%E5%8C%85%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/17/7-go%E7%9A%84http%E5%8C%85%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">7.go的http包详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-17 12:25:58 / 修改时间：12:36:57" itemprop="dateCreated datePublished" datetime="2022-09-17T12:25:58+08:00">2022-09-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Go-的-http-包详解"><a href="#Go-的-http-包详解" class="headerlink" title="Go 的 http 包详解"></a>Go 的 http 包详解</h1><p>Go 的 http 有两个核心功能：Conn、ServeMux</p>
+<h2 id="Conn-的-goroutine"><a href="#Conn-的-goroutine" class="headerlink" title="Conn 的 goroutine"></a>Conn 的 goroutine</h2><p>与我们一般编写的 http 服务器不同，Go 为了实现高并发和高性能，使用了 goroutines 来处理 Conn 的读写事件，这样每个请求都能保持独立，相互不会阻塞，可以高效的响应网络事件。这是 Go 高效的保证。</p>
+<p>Go 在等待客户端请求里面是这样写的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">c, err := srv.newConn(rw)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">continue</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> c.serve()</span><br></pre></td></tr></table></figure>
+
+<p>这里我们可以看到客户端的每次请求都会创建一个 Conn，这个 Conn 里面保存了该次请求的信息，然后再传递到对应的 handler，该 handler 中便可以读取到相应的 header 信息，这样保证了每个请求的独立性。</p>
+<h2 id="ServeMux-的自定义"><a href="#ServeMux-的自定义" class="headerlink" title="ServeMux 的自定义"></a>ServeMux 的自定义</h2><p>我们前面小节讲述 conn.server 的时候，其实内部是调用了 http 包默认的路由器，通过路由器把本次请求的信息传递到了后端的处理函数。那么这个路由器是怎么实现的呢？</p>
+<p>它的结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ServeMux <span class="keyword">struct</span> &#123;</span><br><span class="line">    mu sync.RWMutex   <span class="comment">// 锁，由于请求涉及到并发处理，因此这里需要一个锁机制</span></span><br><span class="line">    m  <span class="keyword">map</span>[<span class="type">string</span>]muxEntry  <span class="comment">// 路由规则，一个 string 对应一个 mux 实体，这里的 string 就是注册的路由表达式</span></span><br><span class="line">    hosts <span class="type">bool</span> <span class="comment">// 是否在任意的规则中带有 host 信息</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面看一下 muxEntry</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> muxEntry <span class="keyword">struct</span> &#123;</span><br><span class="line">    explicit <span class="type">bool</span>   <span class="comment">// 是否精确匹配</span></span><br><span class="line">    h        Handler <span class="comment">// 这个路由表达式对应哪个 handler</span></span><br><span class="line">    pattern  <span class="type">string</span>  <span class="comment">// 匹配字符串</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接着看一下 Handler 的定义</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Handler <span class="keyword">interface</span> &#123;</span><br><span class="line">    ServeHTTP(ResponseWriter, *Request)  <span class="comment">// 路由实现器</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Handler 是一个接口，但是前一小节中的 sayhelloName 函数并没有实现 ServeHTTP 这个接口，为什么能添加呢？原来在 http 包里面还定义了一个类型 HandlerFunc, 我们定义的函数 sayhelloName 就是这个 HandlerFunc 调用之后的结果，这个类型默认就实现了 ServeHTTP 这个接口，即我们调用了 HandlerFunc (f), 强制类型转换 f 成为 HandlerFunc 类型，这样 f 就拥有了 ServeHTTP 方法。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> HandlerFunc <span class="function"><span class="keyword">func</span><span class="params">(ResponseWriter, *Request)</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ServeHTTP calls f(w, r).</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f HandlerFunc)</span></span> ServeHTTP(w ResponseWriter, r *Request) &#123;</span><br><span class="line">    f(w, r)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>路由器里面存储好了相应的路由规则之后，那么具体的请求又是怎么分发的呢？请看下面的代码，默认的路由器实现了 <code>ServeHTTP</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span></span> ServeHTTP(w ResponseWriter, r *Request) &#123;</span><br><span class="line">    <span class="keyword">if</span> r.RequestURI == <span class="string">&quot;*&quot;</span> &#123;</span><br><span class="line">        w.Header().Set(<span class="string">&quot;Connection&quot;</span>, <span class="string">&quot;close&quot;</span>)</span><br><span class="line">        w.WriteHeader(StatusBadRequest)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    h, _ := mux.Handler(r)</span><br><span class="line">    h.ServeHTTP(w, r)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上所示路由器接收到请求之后，如果是 * 那么关闭链接，不然调用 mux.Handler(r) 返回对应设置路由的处理 Handler，然后执行 h.ServeHTTP(w, r)</p>
+<p>也就是调用对应路由的 handler 的 ServerHTTP 接口，那么 mux.Handler (r) 怎么处理的呢？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span></span> Handler(r *Request) (h Handler, pattern <span class="type">string</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> r.Method != <span class="string">&quot;CONNECT&quot;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> p := cleanPath(r.URL.Path); p != r.URL.Path &#123;</span><br><span class="line">            _, pattern = mux.handler(r.Host, p)</span><br><span class="line">            <span class="keyword">return</span> RedirectHandler(p, StatusMovedPermanently), pattern</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> mux.handler(r.Host, r.URL.Path)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(mux *ServeMux)</span></span> handler(host, path <span class="type">string</span>) (h Handler, pattern <span class="type">string</span>) &#123;</span><br><span class="line">    mux.mu.RLock()</span><br><span class="line">    <span class="keyword">defer</span> mux.mu.RUnlock()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Host-specific pattern takes precedence over generic ones</span></span><br><span class="line">    <span class="keyword">if</span> mux.hosts &#123;</span><br><span class="line">        h, pattern = mux.match(host + path)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> h == <span class="literal">nil</span> &#123;</span><br><span class="line">        h, pattern = mux.match(path)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> h == <span class="literal">nil</span> &#123;</span><br><span class="line">        h, pattern = NotFoundHandler(), <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原来他是根据用户请求的 URL 和路由器里面存储的 map 去匹配的，当匹配到之后返回存储的 handler，调用这个 handler 的 ServeHTTP 接口就可以执行到相应的函数了。</p>
+<p>通过上面这个介绍，我们了解了整个路由过程，Go 其实支持外部实现的路由器 ListenAndServe 的第二个参数就是用以配置外部路由器的，它是一个 Handler 接口，即外部路由器只要实现了 Handler 接口就可以，我们可以在自己实现的路由器的 ServeHTTP 里面实现自定义路由功能。</p>
+<p>如下代码所示，我们自己实现了一个简易的路由器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> MyMux <span class="keyword">struct</span> &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *MyMux)</span></span> ServeHTTP(w http.ResponseWriter, r *http.Request) &#123;</span><br><span class="line">    <span class="keyword">if</span> r.URL.Path == <span class="string">&quot;/&quot;</span> &#123;</span><br><span class="line">        sayhelloName(w, r)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    http.NotFound(w, r)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sayhelloName</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    fmt.Fprintf(w, <span class="string">&quot;Hello myroute!&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    mux := &amp;MyMux&#123;&#125;</span><br><span class="line">    http.ListenAndServe(<span class="string">&quot;:9090&quot;</span>, mux)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Go-代码的执行流程"><a href="#Go-代码的执行流程" class="headerlink" title="Go 代码的执行流程"></a>Go 代码的执行流程</h2><p>通过对 http 包的分析之后，现在让我们来梳理一下整个的代码执行过程。</p>
+<p>首先调用 Http.HandleFunc</p>
+<p>按顺序做了几件事：</p>
+<p>1 调用了 DefaultServeMux 的 HandleFunc</p>
+<p>2 调用了 DefaultServeMux 的 Handle</p>
+<p>3 往 DefaultServeMux 的 map [string] muxEntry 中增加对应的 handler 和路由规则</p>
+<p>其次调用 http.ListenAndServe (“:9090”, nil)</p>
+<p>按顺序做了几件事情：</p>
+<p>1 实例化 Server</p>
+<p>2 调用 Server 的 ListenAndServe ()</p>
+<p>3 调用 net.Listen (“tcp”, addr) 监听端口</p>
+<p>4 启动一个 for 循环，在循环体中 Accept 请求</p>
+<p>5 对每个请求实例化一个 Conn，并且开启一个 goroutine 为这个请求进行服务 go c.serve ()</p>
+<p>6 读取每个请求的内容 w, err :&#x3D; c.readRequest ()</p>
+<p>7 判断 handler 是否为空，如果没有设置 handler（这个例子就没有设置 handler），handler 就设置为 DefaultServeMux</p>
+<p>8 调用 handler 的 ServeHttp</p>
+<p>9 在这个例子中，下面就进入到 DefaultServeMux.ServeHttp</p>
+<p>10 根据 request 选择 handler，并且进入到这个 handler 的 ServeHTTP<br>11 选择 handler：</p>
+<p>A 判断是否有路由能满足这个 request（循环遍历 ServeMux 的 muxEntry）</p>
+<p>B 如果有路由满足，调用这个路由 handler 的 ServeHTTP</p>
+<p>C 如果没有路由满足，调用 NotFoundHandler 的 ServeHTTP</p>
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/034-gos-http-package-detailed-solution/3171">03.4. Go 的 http 包详解 | 第三章. Web 基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/17/6.%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AAweb%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/17/6.%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AAweb%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="post-title-link" itemprop="url">6.搭建一个web服务器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-17 12:02:18 / 修改时间：12:24:53" itemprop="dateCreated datePublished" datetime="2022-09-17T12:02:18+08:00">2022-09-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Go-搭建一个-Web-服务器"><a href="#Go-搭建一个-Web-服务器" class="headerlink" title="Go 搭建一个 Web 服务器"></a>Go 搭建一个 Web 服务器</h1><h2 id="http-包建立-Web-服务器"><a href="#http-包建立-Web-服务器" class="headerlink" title="http 包建立 Web 服务器"></a>http 包建立 Web 服务器</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;strings&quot;</span></span><br><span class="line">    <span class="string">&quot;log&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sayhelloName</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    r.ParseForm()  <span class="comment">// 解析参数，默认是不会解析的</span></span><br><span class="line">    fmt.Println(r.Form)  <span class="comment">// 这些信息是输出到服务器端的打印信息</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;path&quot;</span>, r.URL.Path)</span><br><span class="line">    fmt.Println(<span class="string">&quot;scheme&quot;</span>, r.URL.Scheme)</span><br><span class="line">    fmt.Println(r.Form[<span class="string">&quot;url_long&quot;</span>])</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> r.Form &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;key:&quot;</span>, k)</span><br><span class="line">        fmt.Println(<span class="string">&quot;val:&quot;</span>, strings.Join(v, <span class="string">&quot;&quot;</span>))</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Fprintf(w, <span class="string">&quot;Hello astaxie!&quot;</span>) <span class="comment">// 这个写入到 w 的是输出到客户端的</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/&quot;</span>, sayhelloName) <span class="comment">// 设置访问的路由</span></span><br><span class="line">    err := http.ListenAndServe(<span class="string">&quot;:9090&quot;</span>, <span class="literal">nil</span>) <span class="comment">// 设置监听的端口</span></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(<span class="string">&quot;ListenAndServe: &quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这个代码，我们 build 之后，然后执行 web.exe, 这个时候其实已经在 9090 端口监听 http 链接请求了。</p>
+<p>在浏览器输入 <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a></p>
+<p>可以看到浏览器页面输出了 Hello astaxie!</p>
+<p>可以换一个地址试试：<a target="_blank" rel="noopener" href="http://localhost:9090/?url_long=111&amp;url_long=222">http://localhost:9090/?url_long=111&amp;url_long=222</a></p>
+<p>看看浏览器输出的是什么，服务器输出的是什么？</p>
+<h2 id="web-工作方式的几个概念"><a href="#web-工作方式的几个概念" class="headerlink" title="web 工作方式的几个概念"></a>web 工作方式的几个概念</h2><p>以下均是服务器端的几个概念</p>
+<p>Request：用户请求的信息，用来解析用户的请求信息，包括 post、get、cookie、url 等信息</p>
+<p>Response：服务器需要反馈给客户端的信息</p>
+<p>Conn：用户的每次请求链接</p>
+<p>Handler：处理请求和生成返回信息的处理逻辑</p>
+<h2 id="分析-http-包运行机制"><a href="#分析-http-包运行机制" class="headerlink" title="分析 http 包运行机制"></a>分析 http 包运行机制</h2><p>创建 Listen Socket, 监听指定的端口，等待客户端请求到来。</p>
+<p>Listen Socket 接受客户端的请求，得到 Client Socket, 接下来通过 Client Socket 与客户端通信。</p>
+<p>处理客户端的请求，首先从 Client Socket 读取 HTTP 请求的协议头，如果是 POST 方法，还可能要读取客户端提交的数据，然后交给相应的 handler 处理请求，handler 处理完毕准备好客户端需要的数据，通过 Client Socket 写给客户端。</p>
+<p>这整个的过程里面我们只要了解清楚下面三个问题，也就知道 Go 是如何让 Web 运行起来了</p>
+<p>如何监听端口？<br>如何接收客户端请求？<br>如何分配 handler？<br>前面小节的代码里面我们可以看到，Go 是通过一个函数 ListenAndServe 来处理这些事情的，这个底层其实这样处理的：初始化一个 server 对象，然后调用了 net.Listen(“tcp”, addr)，也就是底层用 TCP 协议搭建了一个服务，然后监控我们设置的端口。</p>
+<p>下面代码来自 Go 的 http 包的源码，通过下面的代码我们可以看到整个的 http 处理过程：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(srv *Server)</span></span> Serve(l net.Listener) <span class="type">error</span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> l.Close()</span><br><span class="line">    <span class="keyword">var</span> tempDelay time.Duration <span class="comment">// how long to sleep on accept failure</span></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        rw, e := l.Accept()</span><br><span class="line">        <span class="keyword">if</span> e != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> ne, ok := e.(net.Error); ok &amp;&amp; ne.Temporary() &#123;</span><br><span class="line">                <span class="keyword">if</span> tempDelay == <span class="number">0</span> &#123;</span><br><span class="line">                    tempDelay = <span class="number">5</span> * time.Millisecond</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    tempDelay *= <span class="number">2</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> max := <span class="number">1</span> * time.Second; tempDelay &gt; max &#123;</span><br><span class="line">                    tempDelay = max</span><br><span class="line">                &#125;</span><br><span class="line">                log.Printf(<span class="string">&quot;http: Accept error: %v; retrying in %v&quot;</span>, e, tempDelay)</span><br><span class="line">                time.Sleep(tempDelay)</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> e</span><br><span class="line">        &#125;</span><br><span class="line">        tempDelay = <span class="number">0</span></span><br><span class="line">        c, err := srv.newConn(rw)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">go</span> c.serve()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>监控之后如何接收客户端的请求呢？上面代码执行监控端口之后，调用了 srv.Serve(net.Listener) 函数，这个函数就是处理接收客户端的请求信息。这个函数里面起了一个 for{}，首先通过 Listener 接收请求，其次创建一个 Conn，最后单独开了一个 goroutine，把这个请求的数据当做参数扔给这个 conn 去服务：go c.serve()。这个就是高并发体现了，用户的每一次请求都是在一个新的 goroutine 去服务，相互不影响。</p>
+<p>那么如何具体分配到相应的函数来处理请求呢？conn 首先会解析 request:c.readRequest(), 然后获取相应的 handler:handler :&#x3D; c.server.Handler，也就是我们刚才在调用函数 ListenAndServe 时候的第二个参数，我们前面例子传递的是 nil，也就是为空，那么默认获取 handler &#x3D; DefaultServeMux, 那么这个变量用来做什么的呢？对，这个变量就是一个路由器，它用来匹配 url 跳转到其相应的 handle 函数，那么这个我们有设置过吗？有，我们调用的代码里面第一句不是调用了 http.HandleFunc(“&#x2F;“, sayhelloName) 嘛。这个作用就是注册了请求 &#x2F; 的路由规则，当请求 uri 为 “&#x2F;“，路由就会转到函数 sayhelloName，DefaultServeMux 会调用 ServeHTTP 方法，这个方法内部其实就是调用 sayhelloName 本身，最后通过写入 response 的信息反馈到客户端。</p>
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/how-033-go-makes-web-work/3170">03.3. Go 如何使得 Web 工作 | 第三章. Web 基础 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/16/5.%E5%B9%B6%E5%8F%91/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1633,704 +2096,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E5%BA%94%E7%94%A8%E5%B1%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E5%BA%94%E7%94%A8%E5%B1%82/" class="post-title-link" itemprop="url">计算机网络—应用层</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-04 12:16:44 / 修改时间：12:28:41" itemprop="dateCreated datePublished" datetime="2022-09-04T12:16:44+08:00">2022-09-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p>[CS-Notes&#x2F;计算机网络 - 应用层.md at master · CyC2018&#x2F;CS-Notes (github.com)](<a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络</a> - 应用层.md)</p>
-<h1 id="计算机网络-应用层"><a href="#计算机网络-应用层" class="headerlink" title="计算机网络 - 应用层"></a>计算机网络 - 应用层</h1><h2 id="域名系统"><a href="#域名系统" class="headerlink" title="域名系统"></a>域名系统</h2><p>DNS 是一个分布式数据库，提供了主机名和 IP 地址之间相互转换的服务。这里的分布式数据库是指，每个站点只保留它自己的那部分数据。</p>
-<p>域名具有层次结构，从上到下依次为：根域名、顶级域名、二级域名。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/5a570852a0baf09c9592f0a08c8476cf3d653b8d673ca47d8f3e65342d5fd81c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62353465656231362d306230652d343834632d626536322d3330366635376334306437372e6a7067"><img src="https://camo.githubusercontent.com/5a570852a0baf09c9592f0a08c8476cf3d653b8d673ca47d8f3e65342d5fd81c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62353465656231362d306230652d343834632d626536322d3330366635376334306437372e6a7067" alt="img"></a></p>
-<p>DNS 可以使用 UDP 或者 TCP 进行传输，使用的端口号都为 53。大多数情况下 DNS 使用 UDP 进行传输，这就要求域名解析器和域名服务器都必须自己处理超时和重传从而保证可靠性。在两种情况下会使用 TCP 进行传输：</p>
-<ul>
-<li>如果返回的响应超过的 512 字节（UDP 最大只支持 512 字节的数据）。</li>
-<li>区域传送（区域传送是主域名服务器向辅助域名服务器传送变化的那部分数据）。</li>
-</ul>
-<h2 id="文件传送协议"><a href="#文件传送协议" class="headerlink" title="文件传送协议"></a>文件传送协议</h2><p>FTP 使用 TCP 进行连接，它需要两个连接来传送一个文件：</p>
-<ul>
-<li>控制连接：服务器打开端口号 21 等待客户端的连接，客户端主动建立连接后，使用这个连接将客户端的命令传送给服务器，并传回服务器的应答。</li>
-<li>数据连接：用来传送一个文件数据。</li>
-</ul>
-<p>根据数据连接是否是服务器端主动建立，FTP 有主动和被动两种模式：</p>
-<ul>
-<li>主动模式：服务器端主动建立数据连接，其中服务器端的端口号为 20，客户端的端口号随机，但是必须大于 1024，因为 0~1023 是熟知端口号。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/5356c8fe1bc1ba9be429d8e7868fa054b536e06c189ee181d030e90d26d02ecf/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30336634373934302d333834332d346235312d396534322d3564636166663434383538622e6a7067"><img src="https://camo.githubusercontent.com/5356c8fe1bc1ba9be429d8e7868fa054b536e06c189ee181d030e90d26d02ecf/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f30336634373934302d333834332d346235312d396534322d3564636166663434383538622e6a7067" alt="img"></a></p>
-<ul>
-<li>被动模式：客户端主动建立数据连接，其中客户端的端口号由客户端自己指定，服务器端的端口号随机。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/9f8b3b9b29d7f93c9d213288b27892f049d013604ace12a216415e8717dc4725/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62653563326336312d383664322d346462612d613238392d6234386561323332313964652e6a7067"><img src="https://camo.githubusercontent.com/9f8b3b9b29d7f93c9d213288b27892f049d013604ace12a216415e8717dc4725/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62653563326336312d383664322d346462612d613238392d6234386561323332313964652e6a7067" alt="img"></a></p>
-<p>主动模式要求客户端开放端口号给服务器端，需要去配置客户端的防火墙。被动模式只需要服务器端开放端口号即可，无需客户端配置防火墙。但是被动模式会导致服务器端的安全性减弱，因为开放了过多的端口号。</p>
-<h2 id="动态主机配置协议"><a href="#动态主机配置协议" class="headerlink" title="动态主机配置协议"></a>动态主机配置协议</h2><p>DHCP (Dynamic Host Configuration Protocol) 提供了即插即用的连网方式，用户不再需要手动配置 IP 地址等信息。</p>
-<p>DHCP 配置的内容不仅是 IP 地址，还包括子网掩码、网关 IP 地址。</p>
-<p>DHCP 工作过程如下：</p>
-<ol>
-<li>客户端发送 Discover 报文，该报文的目的地址为 255.255.255.255:67，源地址为 0.0.0.0:68，被放入 UDP 中，该报文被广播到同一个子网的所有主机上。如果客户端和 DHCP 服务器不在同一个子网，就需要使用中继代理。</li>
-<li>DHCP 服务器收到 Discover 报文之后，发送 Offer 报文给客户端，该报文包含了客户端所需要的信息。因为客户端可能收到多个 DHCP 服务器提供的信息，因此客户端需要进行选择。</li>
-<li>如果客户端选择了某个 DHCP 服务器提供的信息，那么就发送 Request 报文给该 DHCP 服务器。</li>
-<li>DHCP 服务器发送 Ack 报文，表示客户端此时可以使用提供给它的信息。</li>
-</ol>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/7c73e5315582ad00ac7d93a58b5a26944b896b7a3107b82e4bbfad61f86da3af/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32333231396534632d396663302d343035312d623333612d3262643935626630353461622e6a7067"><img src="https://camo.githubusercontent.com/7c73e5315582ad00ac7d93a58b5a26944b896b7a3107b82e4bbfad61f86da3af/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32333231396534632d396663302d343035312d623333612d3262643935626630353461622e6a7067" alt="img"></a></p>
-<h2 id="远程登录协议"><a href="#远程登录协议" class="headerlink" title="远程登录协议"></a>远程登录协议</h2><p>TELNET 用于登录到远程主机上，并且远程主机上的输出也会返回。</p>
-<p>TELNET 可以适应许多计算机和操作系统的差异，例如不同操作系统系统的换行符定义。</p>
-<h2 id="电子邮件协议"><a href="#电子邮件协议" class="headerlink" title="电子邮件协议"></a>电子邮件协议</h2><p>一个电子邮件系统由三部分组成：用户代理、邮件服务器以及邮件协议。</p>
-<p>邮件协议包含发送协议和读取协议，发送协议常用 SMTP，读取协议常用 POP3 和 IMAP。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/8f071866ed78ee7403deed893b30ecb9cbfcb293e558988e48003e315ff06f2b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37623365666139392d643330362d343938322d386366622d6537313533633333616162342e706e67"><img src="https://camo.githubusercontent.com/8f071866ed78ee7403deed893b30ecb9cbfcb293e558988e48003e315ff06f2b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37623365666139392d643330362d343938322d386366622d6537313533633333616162342e706e67" alt="img"></a></p>
-<h3 id="1-SMTP"><a href="#1-SMTP" class="headerlink" title="1. SMTP"></a>1. SMTP</h3><p>SMTP 只能发送 ASCII 码，而互联网邮件扩充 MIME 可以发送二进制文件。MIME 并没有改动或者取代 SMTP，而是增加邮件主体的结构，定义了非 ASCII 码的编码规则。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/338a79fbf44ed147d719afd916c92fb66d0744305959f75fdfeeb020361eeca0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65643535323262622d336136302d343831632d383635342d3433653731393561343866652e706e67"><img src="https://camo.githubusercontent.com/338a79fbf44ed147d719afd916c92fb66d0744305959f75fdfeeb020361eeca0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65643535323262622d336136302d343831632d383635342d3433653731393561343866652e706e67" alt="img"></a></p>
-<h3 id="2-POP3"><a href="#2-POP3" class="headerlink" title="2. POP3"></a>2. POP3</h3><p>POP3 的特点是只要用户从服务器上读取了邮件，就把该邮件删除。但最新版本的 POP3 可以不删除邮件。</p>
-<h3 id="3-IMAP"><a href="#3-IMAP" class="headerlink" title="3. IMAP"></a>3. IMAP</h3><p>IMAP 协议中客户端和服务器上的邮件保持同步，如果不手动删除邮件，那么服务器上的邮件也不会被删除。IMAP 这种做法可以让用户随时随地去访问服务器上的邮件。</p>
-<h2 id="常用端口"><a href="#常用端口" class="headerlink" title="常用端口"></a>常用端口</h2><table>
-<thead>
-<tr>
-<th>应用</th>
-<th>应用层协议</th>
-<th>端口号</th>
-<th>传输层协议</th>
-<th>备注</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>域名解析</td>
-<td>DNS</td>
-<td>53</td>
-<td>UDP&#x2F;TCP</td>
-<td>长度超过 512 字节时使用 TCP</td>
-</tr>
-<tr>
-<td>动态主机配置协议</td>
-<td>DHCP</td>
-<td>67&#x2F;68</td>
-<td>UDP</td>
-<td></td>
-</tr>
-<tr>
-<td>简单网络管理协议</td>
-<td>SNMP</td>
-<td>161&#x2F;162</td>
-<td>UDP</td>
-<td></td>
-</tr>
-<tr>
-<td>文件传送协议</td>
-<td>FTP</td>
-<td>20&#x2F;21</td>
-<td>TCP</td>
-<td>控制连接 21，数据连接 20</td>
-</tr>
-<tr>
-<td>远程终端协议</td>
-<td>TELNET</td>
-<td>23</td>
-<td>TCP</td>
-<td></td>
-</tr>
-<tr>
-<td>超文本传送协议</td>
-<td>HTTP</td>
-<td>80</td>
-<td>TCP</td>
-<td></td>
-</tr>
-<tr>
-<td>简单邮件传送协议</td>
-<td>SMTP</td>
-<td>25</td>
-<td>TCP</td>
-<td></td>
-</tr>
-<tr>
-<td>邮件读取协议</td>
-<td>POP3</td>
-<td>110</td>
-<td>TCP</td>
-<td></td>
-</tr>
-<tr>
-<td>网际报文存取协议</td>
-<td>IMAP</td>
-<td>143</td>
-<td>TCP</td>
-<td></td>
-</tr>
-</tbody></table>
-<h2 id="Web-页面请求过程"><a href="#Web-页面请求过程" class="headerlink" title="Web 页面请求过程"></a>Web 页面请求过程</h2><h3 id="1-DHCP-配置主机信息"><a href="#1-DHCP-配置主机信息" class="headerlink" title="1. DHCP 配置主机信息"></a>1. DHCP 配置主机信息</h3><ul>
-<li>假设主机最开始没有 IP 地址以及其它信息，那么就需要先使用 DHCP 来获取。</li>
-<li>主机生成一个 DHCP 请求报文，并将这个报文放入具有目的端口 67 和源端口 68 的 UDP 报文段中。</li>
-<li>该报文段则被放入在一个具有广播 IP 目的地址(255.255.255.255) 和源 IP 地址（0.0.0.0）的 IP 数据报中。</li>
-<li>该数据报则被放置在 MAC 帧中，该帧具有目的地址 FF:<zero-width space>FF:<zero-width space>FF:<zero-width space>FF:<zero-width space>FF:FF，将广播到与交换机连接的所有设备。</li>
-<li>连接在交换机的 DHCP 服务器收到广播帧之后，不断地向上分解得到 IP 数据报、UDP 报文段、DHCP 请求报文，之后生成 DHCP ACK 报文，该报文包含以下信息：IP 地址、DNS 服务器的 IP 地址、默认网关路由器的 IP 地址和子网掩码。该报文被放入 UDP 报文段中，UDP 报文段有被放入 IP 数据报中，最后放入 MAC 帧中。</li>
-<li>该帧的目的地址是请求主机的 MAC 地址，因为交换机具有自学习能力，之前主机发送了广播帧之后就记录了 MAC 地址到其转发接口的交换表项，因此现在交换机就可以直接知道应该向哪个接口发送该帧。</li>
-<li>主机收到该帧后，不断分解得到 DHCP 报文。之后就配置它的 IP 地址、子网掩码和 DNS 服务器的 IP 地址，并在其 IP 转发表中安装默认网关。</li>
-</ul>
-<h3 id="2-ARP-解析-MAC-地址"><a href="#2-ARP-解析-MAC-地址" class="headerlink" title="2. ARP 解析 MAC 地址"></a>2. ARP 解析 MAC 地址</h3><ul>
-<li>主机通过浏览器生成一个 TCP 套接字，套接字向 HTTP 服务器发送 HTTP 请求。为了生成该套接字，主机需要知道网站的域名对应的 IP 地址。</li>
-<li>主机生成一个 DNS 查询报文，该报文具有 53 号端口，因为 DNS 服务器的端口号是 53。</li>
-<li>该 DNS 查询报文被放入目的地址为 DNS 服务器 IP 地址的 IP 数据报中。</li>
-<li>该 IP 数据报被放入一个以太网帧中，该帧将发送到网关路由器。</li>
-<li>DHCP 过程只知道网关路由器的 IP 地址，为了获取网关路由器的 MAC 地址，需要使用 ARP 协议。</li>
-<li>主机生成一个包含目的地址为网关路由器 IP 地址的 ARP 查询报文，将该 ARP 查询报文放入一个具有广播目的地址（FF:<zero-width space>FF:<zero-width space>FF:<zero-width space>FF:<zero-width space>FF:FF）的以太网帧中，并向交换机发送该以太网帧，交换机将该帧转发给所有的连接设备，包括网关路由器。</li>
-<li>网关路由器接收到该帧后，不断向上分解得到 ARP 报文，发现其中的 IP 地址与其接口的 IP 地址匹配，因此就发送一个 ARP 回答报文，包含了它的 MAC 地址，发回给主机。</li>
-</ul>
-<h3 id="3-DNS-解析域名"><a href="#3-DNS-解析域名" class="headerlink" title="3. DNS 解析域名"></a>3. DNS 解析域名</h3><ul>
-<li>知道了网关路由器的 MAC 地址之后，就可以继续 DNS 的解析过程了。</li>
-<li>网关路由器接收到包含 DNS 查询报文的以太网帧后，抽取出 IP 数据报，并根据转发表决定该 IP 数据报应该转发的路由器。</li>
-<li>因为路由器具有内部网关协议（RIP、OSPF）和外部网关协议（BGP）这两种路由选择协议，因此路由表中已经配置了网关路由器到达 DNS 服务器的路由表项。</li>
-<li>到达 DNS 服务器之后，DNS 服务器抽取出 DNS 查询报文，并在 DNS 数据库中查找待解析的域名。</li>
-<li>找到 DNS 记录之后，发送 DNS 回答报文，将该回答报文放入 UDP 报文段中，然后放入 IP 数据报中，通过路由器反向转发回网关路由器，并经过以太网交换机到达主机。</li>
-</ul>
-<h3 id="4-HTTP-请求页面"><a href="#4-HTTP-请求页面" class="headerlink" title="4. HTTP 请求页面"></a>4. HTTP 请求页面</h3><ul>
-<li>有了 HTTP 服务器的 IP 地址之后，主机就能够生成 TCP 套接字，该套接字将用于向 Web 服务器发送 HTTP GET 报文。</li>
-<li>在生成 TCP 套接字之前，必须先与 HTTP 服务器进行三次握手来建立连接。生成一个具有目的端口 80 的 TCP SYN 报文段，并向 HTTP 服务器发送该报文段。</li>
-<li>HTTP 服务器收到该报文段之后，生成 TCP SYN ACK 报文段，发回给主机。</li>
-<li>连接建立之后，浏览器生成 HTTP GET 报文，并交付给 HTTP 服务器。</li>
-<li>HTTP 服务器从 TCP 套接字读取 HTTP GET 报文，生成一个 HTTP 响应报文，将 Web 页面内容放入报文主体中，发回给主机。</li>
-<li>浏览器收到 HTTP 响应报文后，抽取出 Web 页面内容，之后进行渲染，显示 Web 页面。</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E4%BC%A0%E8%BE%93%E5%B1%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E4%BC%A0%E8%BE%93%E5%B1%82/" class="post-title-link" itemprop="url">计算机网络—传输层</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-04 12:16:36 / 修改时间：12:27:53" itemprop="dateCreated datePublished" datetime="2022-09-04T12:16:36+08:00">2022-09-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p>[CS-Notes&#x2F;计算机网络 - 传输层.md at master · CyC2018&#x2F;CS-Notes (github.com)](<a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络</a> - 传输层.md)</p>
-<h1 id="计算机网络-传输层"><a href="#计算机网络-传输层" class="headerlink" title="计算机网络 - 传输层"></a>计算机网络 - 传输层</h1><p>网络层只把分组发送到目的主机，但是真正通信的并不是主机而是主机中的进程。传输层提供了进程间的逻辑通信，传输层向高层用户屏蔽了下面网络层的核心细节，使应用程序看起来像是在两个传输层实体之间有一条端到端的逻辑通信信道。</p>
-<h2 id="UDP-和-TCP-的特点"><a href="#UDP-和-TCP-的特点" class="headerlink" title="UDP 和 TCP 的特点"></a>UDP 和 TCP 的特点</h2><ul>
-<li>用户数据报协议 UDP（User Datagram Protocol）是无连接的，尽最大可能交付，没有拥塞控制，面向报文（对于应用程序传下来的报文不合并也不拆分，只是添加 UDP 首部），支持一对一、一对多、多对一和多对多的交互通信。</li>
-<li>传输控制协议 TCP（Transmission Control Protocol）是面向连接的，提供可靠交付，有流量控制，拥塞控制，提供全双工通信，面向字节流（把应用层传下来的报文看成字节流，把字节流组织成大小不等的数据块），每一条 TCP 连接只能是点对点的（一对一）。</li>
-</ul>
-<h2 id="UDP-首部格式"><a href="#UDP-首部格式" class="headerlink" title="UDP 首部格式"></a>UDP 首部格式</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/513fdc176a3598465859ee974e9217e2cc0f4e14dbf6c0d0cd03d611865bb3b1/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64346333613461312d303834362d343665632d396363332d6561646466636137313235342e6a7067"><img src="https://camo.githubusercontent.com/513fdc176a3598465859ee974e9217e2cc0f4e14dbf6c0d0cd03d611865bb3b1/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f64346333613461312d303834362d343665632d396363332d6561646466636137313235342e6a7067" alt="img"></a></p>
-<p>首部字段只有 8 个字节，包括源端口、目的端口、长度、检验和。12 字节的伪首部是为了计算检验和临时添加的。</p>
-<h2 id="TCP-首部格式"><a href="#TCP-首部格式" class="headerlink" title="TCP 首部格式"></a>TCP 首部格式</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/690200ac72bf19ad2e859901f61d7e4d3a21c83608d9dd62a1146eca359cf655/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f35356463346538342d353733642d346331332d613736352d3532656431646432353166392e706e67"><img src="https://camo.githubusercontent.com/690200ac72bf19ad2e859901f61d7e4d3a21c83608d9dd62a1146eca359cf655/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f35356463346538342d353733642d346331332d613736352d3532656431646432353166392e706e67" alt="img"></a></p>
-<ul>
-<li><strong>序号</strong> ：用于对字节流进行编号，例如序号为 301，表示第一个字节的编号为 301，如果携带的数据长度为 100 字节，那么下一个报文段的序号应为 401。</li>
-<li><strong>确认号</strong> ：期望收到的下一个报文段的序号。例如 B 正确收到 A 发送来的一个报文段，序号为 501，携带的数据长度为 200 字节，因此 B 期望下一个报文段的序号为 701，B 发送给 A 的确认报文段中确认号就为 701。</li>
-<li><strong>数据偏移</strong> ：指的是数据部分距离报文段起始处的偏移量，实际上指的是首部的长度。</li>
-<li><strong>确认 ACK</strong> ：当 ACK&#x3D;1 时确认号字段有效，否则无效。TCP 规定，在连接建立后所有传送的报文段都必须把 ACK 置 1。</li>
-<li><strong>同步 SYN</strong> ：在连接建立时用来同步序号。当 SYN&#x3D;1，ACK&#x3D;0 时表示这是一个连接请求报文段。若对方同意建立连接，则响应报文中 SYN&#x3D;1，ACK&#x3D;1。</li>
-<li><strong>终止 FIN</strong> ：用来释放一个连接，当 FIN&#x3D;1 时，表示此报文段的发送方的数据已发送完毕，并要求释放连接。</li>
-<li><strong>窗口</strong> ：窗口值作为接收方让发送方设置其发送窗口的依据。之所以要有这个限制，是因为接收方的数据缓存空间是有限的。</li>
-</ul>
-<h2 id="TCP-的三次握手"><a href="#TCP-的三次握手" class="headerlink" title="TCP 的三次握手"></a>TCP 的三次握手</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/1a8423d689b0c5bd9bcebb68114349f50a0ba5fa4a3584db580b749515b99c50/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65393264306562632d376434362d343133622d616563312d3334613339363032663738372e706e67"><img src="https://camo.githubusercontent.com/1a8423d689b0c5bd9bcebb68114349f50a0ba5fa4a3584db580b749515b99c50/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65393264306562632d376434362d343133622d616563312d3334613339363032663738372e706e67" alt="img"></a></p>
-<p>假设 A 为客户端，B 为服务器端。</p>
-<ul>
-<li>首先 B 处于 LISTEN（监听）状态，等待客户的连接请求。</li>
-<li>A 向 B 发送连接请求报文，SYN&#x3D;1，ACK&#x3D;0，选择一个初始的序号 x。</li>
-<li>B 收到连接请求报文，如果同意建立连接，则向 A 发送连接确认报文，SYN&#x3D;1，ACK&#x3D;1，确认号为 x+1，同时也选择一个初始的序号 y。</li>
-<li>A 收到 B 的连接确认报文后，还要向 B 发出确认，确认号为 y+1，序号为 x+1。</li>
-<li>B 收到 A 的确认后，连接建立。</li>
-</ul>
-<p><strong>三次握手的原因</strong></p>
-<p>第三次握手是为了防止失效的连接请求到达服务器，让服务器错误打开连接。</p>
-<p>客户端发送的连接请求如果在网络中滞留，那么就会隔很长一段时间才能收到服务器端发回的连接确认。客户端等待一个超时重传时间之后，就会重新请求连接。但是这个滞留的连接请求最后还是会到达服务器，如果不进行三次握手，那么服务器就会打开两个连接。如果有第三次握手，客户端会忽略服务器之后发送的对滞留连接请求的连接确认，不进行第三次握手，因此就不会再次打开连接。</p>
-<h2 id="TCP-的四次挥手"><a href="#TCP-的四次挥手" class="headerlink" title="TCP 的四次挥手"></a>TCP 的四次挥手</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/790654187401ebbe3f8b7b5c25abc4e234b13a5fde546963d201e2092e964a25/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f66383761666537322d633264662d346331322d616330332d3962386435383161386166382e6a7067"><img src="https://camo.githubusercontent.com/790654187401ebbe3f8b7b5c25abc4e234b13a5fde546963d201e2092e964a25/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f66383761666537322d633264662d346331322d616330332d3962386435383161386166382e6a7067" alt="img"></a></p>
-<p>以下描述不讨论序号和确认号，因为序号和确认号的规则比较简单。并且不讨论 ACK，因为 ACK 在连接建立之后都为 1。</p>
-<ul>
-<li>A 发送连接释放报文，FIN&#x3D;1。</li>
-<li>B 收到之后发出确认，此时 TCP 属于半关闭状态，B 能向 A 发送数据但是 A 不能向 B 发送数据。</li>
-<li>当 B 不再需要连接时，发送连接释放报文，FIN&#x3D;1。</li>
-<li>A 收到后发出确认，进入 TIME-WAIT 状态，等待 2 MSL（最大报文存活时间）后释放连接。</li>
-<li>B 收到 A 的确认后释放连接。</li>
-</ul>
-<p><strong>四次挥手的原因</strong></p>
-<p>客户端发送了 FIN 连接释放报文之后，服务器收到了这个报文，就进入了 CLOSE-WAIT 状态。这个状态是为了让服务器端发送还未传送完毕的数据，传送完毕之后，服务器会发送 FIN 连接释放报文。</p>
-<p><strong>TIME_WAIT</strong></p>
-<p>客户端接收到服务器端的 FIN 报文后进入此状态，此时并不是直接进入 CLOSED 状态，还需要等待一个时间计时器设置的时间 2MSL。这么做有两个理由：</p>
-<ul>
-<li>确保最后一个确认报文能够到达。如果 B 没收到 A 发送来的确认报文，那么就会重新发送连接释放请求报文，A 等待一段时间就是为了处理这种情况的发生。</li>
-<li>等待一段时间是为了让本连接持续时间内所产生的所有报文都从网络中消失，使得下一个新的连接不会出现旧的连接请求报文。</li>
-</ul>
-<h2 id="TCP-可靠传输"><a href="#TCP-可靠传输" class="headerlink" title="TCP 可靠传输"></a>TCP 可靠传输</h2><p>TCP 使用超时重传来实现可靠传输：如果一个已经发送的报文段在超时时间内没有收到确认，那么就重传这个报文段。</p>
-<p>一个报文段从发送再到接收到确认所经过的时间称为往返时间 RTT，加权平均往返时间 RTTs 计算如下：</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/4b31b44c078c2a6fe1354e38006e624c3ae5af66ad3f982d3d73e220a120ab98/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f525454733d28312d61292a2852545473292b612a525454"><img src="https://camo.githubusercontent.com/4b31b44c078c2a6fe1354e38006e624c3ae5af66ad3f982d3d73e220a120ab98/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f525454733d28312d61292a2852545473292b612a525454" alt="img"></a></p>
-<p>其中，0 ≤ a ＜ 1，RTTs 随着 a 的增加更容易受到 RTT 的影响。</p>
-<p>超时时间 RTO 应该略大于 RTTs，TCP 使用的超时时间计算如下：</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/ae415414727a193c7c23b73199e5ca6c1caa84df9822bf02f8483f8a359605e0/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f52544f3d525454732b342a5254545f64"><img src="https://camo.githubusercontent.com/ae415414727a193c7c23b73199e5ca6c1caa84df9822bf02f8483f8a359605e0/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f52544f3d525454732b342a5254545f64" alt="img"></a></p>
-<p>其中 RTTd 为偏差的加权平均值。</p>
-<h2 id="TCP-滑动窗口"><a href="#TCP-滑动窗口" class="headerlink" title="TCP 滑动窗口"></a>TCP 滑动窗口</h2><p>窗口是缓存的一部分，用来暂时存放字节流。发送方和接收方各有一个窗口，接收方通过 TCP 报文段中的窗口字段告诉发送方自己的窗口大小，发送方根据这个值和其它信息设置自己的窗口大小。</p>
-<p>发送窗口内的字节都允许被发送，接收窗口内的字节都允许被接收。如果发送窗口左部的字节已经发送并且收到了确认，那么就将发送窗口向右滑动一定距离，直到左部第一个字节不是已发送并且已确认的状态；接收窗口的滑动类似，接收窗口左部字节已经发送确认并交付主机，就向右滑动接收窗口。</p>
-<p>接收窗口只会对窗口内最后一个按序到达的字节进行确认，例如接收窗口已经收到的字节为 {31, 34, 35}，其中 {31} 按序到达，而 {34, 35} 就不是，因此只对字节 31 进行确认。发送方得到一个字节的确认之后，就知道这个字节之前的所有字节都已经被接收。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/f670e3a7df385079035c54d43f156e63bde8c01b320e1ee40f4060a097c4dad9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61333235336465622d386432312d343061312d616165342d3764313738653461613331392e6a7067"><img src="https://camo.githubusercontent.com/f670e3a7df385079035c54d43f156e63bde8c01b320e1ee40f4060a097c4dad9/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61333235336465622d386432312d343061312d616165342d3764313738653461613331392e6a7067" alt="img"></a></p>
-<h2 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h2><p>流量控制是为了控制发送方发送速率，保证接收方来得及接收。</p>
-<p>接收方发送的确认报文中的窗口字段可以用来控制发送方窗口大小，从而影响发送方的发送速率。将窗口字段设置为 0，则发送方不能发送数据。</p>
-<h2 id="TCP-拥塞控制"><a href="#TCP-拥塞控制" class="headerlink" title="TCP 拥塞控制"></a>TCP 拥塞控制</h2><p>如果网络出现拥塞，分组将会丢失，此时发送方会继续重传，从而导致网络拥塞程度更高。因此当出现拥塞时，应当控制发送方的速率。这一点和流量控制很像，但是出发点不同。流量控制是为了让接收方能来得及接收，而拥塞控制是为了降低整个网络的拥塞程度。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/334400d376dcc5e071b3f76c7f9f0323039a5d3f23975be286518569de35afce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f35316532656439352d363562382d346165392d386166332d3635363032643435326132352e6a7067"><img src="https://camo.githubusercontent.com/334400d376dcc5e071b3f76c7f9f0323039a5d3f23975be286518569de35afce/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f35316532656439352d363562382d346165392d386166332d3635363032643435326132352e6a7067" alt="img"></a></p>
-<p>TCP 主要通过四个算法来进行拥塞控制：慢开始、拥塞避免、快重传、快恢复。</p>
-<p>发送方需要维护一个叫做拥塞窗口（cwnd）的状态变量，注意拥塞窗口与发送方窗口的区别：拥塞窗口只是一个状态变量，实际决定发送方能发送多少数据的是发送方窗口。</p>
-<p>为了便于讨论，做如下假设：</p>
-<ul>
-<li>接收方有足够大的接收缓存，因此不会发生流量控制；</li>
-<li>虽然 TCP 的窗口基于字节，但是这里设窗口的大小单位为报文段。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/96b543c35dfc6a024897cea0354427605b9d238d7af0e8c5821c7ab0c26c2f27/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313066363133662d353134662d343533342d383764642d3962343639396435396433312e706e67"><img src="https://camo.githubusercontent.com/96b543c35dfc6a024897cea0354427605b9d238d7af0e8c5821c7ab0c26c2f27/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39313066363133662d353134662d343533342d383764642d3962343639396435396433312e706e67" alt="img"></a></p>
-<h3 id="1-慢开始与拥塞避免"><a href="#1-慢开始与拥塞避免" class="headerlink" title="1. 慢开始与拥塞避免"></a>1. 慢开始与拥塞避免</h3><p>发送的最初执行慢开始，令 cwnd &#x3D; 1，发送方只能发送 1 个报文段；当收到确认后，将 cwnd 加倍，因此之后发送方能够发送的报文段数量为：2、4、8 …</p>
-<p>注意到慢开始每个轮次都将 cwnd 加倍，这样会让 cwnd 增长速度非常快，从而使得发送方发送的速度增长速度过快，网络拥塞的可能性也就更高。设置一个慢开始门限 ssthresh，当 cwnd &gt;&#x3D; ssthresh 时，进入拥塞避免，每个轮次只将 cwnd 加 1。</p>
-<p>如果出现了超时，则令 ssthresh &#x3D; cwnd &#x2F; 2，然后重新执行慢开始。</p>
-<h3 id="2-快重传与快恢复"><a href="#2-快重传与快恢复" class="headerlink" title="2. 快重传与快恢复"></a>2. 快重传与快恢复</h3><p>在接收方，要求每次接收到报文段都应该对最后一个已收到的有序报文段进行确认。例如已经接收到 M1 和 M2，此时收到 M4，应当发送对 M2 的确认。</p>
-<p>在发送方，如果收到三个重复确认，那么可以知道下一个报文段丢失，此时执行快重传，立即重传下一个报文段。例如收到三个 M2，则 M3 丢失，立即重传 M3。</p>
-<p>在这种情况下，只是丢失个别报文段，而不是网络拥塞。因此执行快恢复，令 ssthresh &#x3D; cwnd &#x2F; 2 ，cwnd &#x3D; ssthresh，注意到此时直接进入拥塞避免。</p>
-<p>慢开始和快恢复的快慢指的是 cwnd 的设定值，而不是 cwnd 的增长速率。慢开始 cwnd 设定为 1，而快恢复 cwnd 设定为 ssthresh。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/d021db430b1dce6f07e811986d9bd1895fff2e9bdf36ea3ebe14df4b31efa6a3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f66363162353431392d633934612d346466312d386434642d6165643961653863633664352e706e67"><img src="https://camo.githubusercontent.com/d021db430b1dce6f07e811986d9bd1895fff2e9bdf36ea3ebe14df4b31efa6a3/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f66363162353431392d633934612d346466312d386434642d6165643961653863633664352e706e67" alt="img"></a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E7%BD%91%E7%BB%9C%E5%B1%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E7%BD%91%E7%BB%9C%E5%B1%82/" class="post-title-link" itemprop="url">计算机网络—网络层</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-04 12:16:29 / 修改时间：12:28:19" itemprop="dateCreated datePublished" datetime="2022-09-04T12:16:29+08:00">2022-09-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p>[CS-Notes&#x2F;计算机网络 - 网络层.md at master · CyC2018&#x2F;CS-Notes (github.com)](<a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络</a> - 网络层.md)</p>
-<h1 id="计算机网络-网络层"><a href="#计算机网络-网络层" class="headerlink" title="计算机网络 - 网络层"></a>计算机网络 - 网络层</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>因为网络层是整个互联网的核心，因此应当让网络层尽可能简单。网络层向上只提供简单灵活的、无连接的、尽最大努力交互的数据报服务。</p>
-<p>使用 IP 协议，可以把异构的物理网络连接起来，使得在网络层看起来好像是一个统一的网络。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/8583dbfe01c04f3328e2ee5e4e47f5025916b6ab7194f5fecdf5659b1187e2bb/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38643737396162372d666663632d343763362d393065632d6564653832363062323336382e706e67"><img src="https://camo.githubusercontent.com/8583dbfe01c04f3328e2ee5e4e47f5025916b6ab7194f5fecdf5659b1187e2bb/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38643737396162372d666663632d343763362d393065632d6564653832363062323336382e706e67" alt="img"></a></p>
-<p>与 IP 协议配套使用的还有三个协议：</p>
-<ul>
-<li>地址解析协议 ARP（Address Resolution Protocol）</li>
-<li>网际控制报文协议 ICMP（Internet Control Message Protocol）</li>
-<li>网际组管理协议 IGMP（Internet Group Management Protocol）</li>
-</ul>
-<h2 id="IP-数据报格式"><a href="#IP-数据报格式" class="headerlink" title="IP 数据报格式"></a>IP 数据报格式</h2><p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/e458e8998827725dfdd45430ff7ea4e3dcc4f261a6ba7fb934deb7be102527d8/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38356330356662312d353534362d346335302d393232312d3231663233316364633863352e6a7067"><img src="https://camo.githubusercontent.com/e458e8998827725dfdd45430ff7ea4e3dcc4f261a6ba7fb934deb7be102527d8/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38356330356662312d353534362d346335302d393232312d3231663233316364633863352e6a7067" alt="img"></a></p>
-<ul>
-<li><strong>版本</strong> : 有 4（IPv4）和 6（IPv6）两个值；</li>
-<li><strong>首部长度</strong> : 占 4 位，因此最大值为 15。值为 1 表示的是 1 个 32 位字的长度，也就是 4 字节。因为固定部分长度为 20 字节，因此该值最小为 5。如果可选字段的长度不是 4 字节的整数倍，就用尾部的填充部分来填充。</li>
-<li><strong>区分服务</strong> : 用来获得更好的服务，一般情况下不使用。</li>
-<li><strong>总长度</strong> : 包括首部长度和数据部分长度。</li>
-<li><strong>生存时间</strong> ：TTL，它的存在是为了防止无法交付的数据报在互联网中不断兜圈子。以路由器跳数为单位，当 TTL 为 0 时就丢弃数据报。</li>
-<li><strong>协议</strong> ：指出携带的数据应该上交给哪个协议进行处理，例如 ICMP、TCP、UDP 等。</li>
-<li><strong>首部检验和</strong> ：因为数据报每经过一个路由器，都要重新计算检验和，因此检验和不包含数据部分可以减少计算的工作量。</li>
-<li><strong>标识</strong> : 在数据报长度过长从而发生分片的情况下，相同数据报的不同分片具有相同的标识符。</li>
-<li><strong>片偏移</strong> : 和标识符一起，用于发生分片的情况。片偏移的单位为 8 字节。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/5a2935c7e397acf88b53a3b9ff7ad79a254cc814c581d667673a55cd4387c020/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32336261383930652d653131632d343565322d613230632d3634643231376638333433302e706e67"><img src="https://camo.githubusercontent.com/5a2935c7e397acf88b53a3b9ff7ad79a254cc814c581d667673a55cd4387c020/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32336261383930652d653131632d343565322d613230632d3634643231376638333433302e706e67" alt="img"></a></p>
-<h2 id="IP-地址编址方式"><a href="#IP-地址编址方式" class="headerlink" title="IP 地址编址方式"></a>IP 地址编址方式</h2><p>IP 地址的编址方式经历了三个历史阶段：</p>
-<ul>
-<li>分类</li>
-<li>子网划分</li>
-<li>无分类</li>
-</ul>
-<h3 id="1-分类"><a href="#1-分类" class="headerlink" title="1. 分类"></a>1. 分类</h3><p>由两部分组成，网络号和主机号，其中不同分类具有不同的网络号长度，并且是固定的。</p>
-<p>IP 地址 ::&#x3D; {&lt; 网络号 &gt;, &lt; 主机号 &gt;}</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/99d2502a42dff18fb88daf91406b8f1dd106bcc6b40bef500cac55e27fd9a795/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63626635306562382d323262342d343532382d613265372d6431383731343364353766372e706e67"><img src="https://camo.githubusercontent.com/99d2502a42dff18fb88daf91406b8f1dd106bcc6b40bef500cac55e27fd9a795/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63626635306562382d323262342d343532382d613265372d6431383731343364353766372e706e67" alt="img"></a></p>
-<h3 id="2-子网划分"><a href="#2-子网划分" class="headerlink" title="2. 子网划分"></a>2. 子网划分</h3><p>通过在主机号字段中拿一部分作为子网号，把两级 IP 地址划分为三级 IP 地址。</p>
-<p>IP 地址 ::&#x3D; {&lt; 网络号 &gt;, &lt; 子网号 &gt;, &lt; 主机号 &gt;}</p>
-<p>要使用子网，必须配置子网掩码。一个 B 类地址的默认子网掩码为 255.255.0.0，如果 B 类地址的子网占两个比特，那么子网掩码为 11111111 11111111 11000000 00000000，也就是 255.255.192.0。</p>
-<p>注意，外部网络看不到子网的存在。</p>
-<h3 id="3-无分类"><a href="#3-无分类" class="headerlink" title="3. 无分类"></a>3. 无分类</h3><p>无分类编址 CIDR 消除了传统 A 类、B 类和 C 类地址以及划分子网的概念，使用网络前缀和主机号来对 IP 地址进行编码，网络前缀的长度可以根据需要变化。</p>
-<p>IP 地址 ::&#x3D; {&lt; 网络前缀号 &gt;, &lt; 主机号 &gt;}</p>
-<p>CIDR 的记法上采用在 IP 地址后面加上网络前缀长度的方法，例如 128.14.35.7&#x2F;20 表示前 20 位为网络前缀。</p>
-<p>CIDR 的地址掩码可以继续称为子网掩码，子网掩码首 1 长度为网络前缀的长度。</p>
-<p>一个 CIDR 地址块中有很多地址，一个 CIDR 表示的网络就可以表示原来的很多个网络，并且在路由表中只需要一个路由就可以代替原来的多个路由，减少了路由表项的数量。把这种通过使用网络前缀来减少路由表项的方式称为路由聚合，也称为 <strong>构成超网</strong> 。</p>
-<p>在路由表中的项目由“网络前缀”和“下一跳地址”组成，在查找时可能会得到不止一个匹配结果，应当采用最长前缀匹配来确定应该匹配哪一个。</p>
-<h2 id="地址解析协议-ARP"><a href="#地址解析协议-ARP" class="headerlink" title="地址解析协议 ARP"></a>地址解析协议 ARP</h2><p>网络层实现主机之间的通信，而链路层实现具体每段链路之间的通信。因此在通信过程中，IP 数据报的源地址和目的地址始终不变，而 MAC 地址随着链路的改变而改变。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/672684df156efa916315f9e1bbcdde78539caa8ec6e8a3d0d782842687dbc113/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36363139323338322d353538622d346230352d613335642d6163346132623161393831312e6a7067"><img src="https://camo.githubusercontent.com/672684df156efa916315f9e1bbcdde78539caa8ec6e8a3d0d782842687dbc113/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36363139323338322d353538622d346230352d613335642d6163346132623161393831312e6a7067" alt="img"></a></p>
-<p>ARP 实现由 IP 地址得到 MAC 地址。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/81c45941a689239d8a0ef8c121b17a5a82ba3a626e92a7bf5c3cf53c6035ea26/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62396437396135612d653761662d343939622d623938392d6631303438336537316238622e6a7067"><img src="https://camo.githubusercontent.com/81c45941a689239d8a0ef8c121b17a5a82ba3a626e92a7bf5c3cf53c6035ea26/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f62396437396135612d653761662d343939622d623938392d6631303438336537316238622e6a7067" alt="img"></a></p>
-<p>每个主机都有一个 ARP 高速缓存，里面有本局域网上的各主机和路由器的 IP 地址到 MAC 地址的映射表。</p>
-<p>如果主机 A 知道主机 B 的 IP 地址，但是 ARP 高速缓存中没有该 IP 地址到 MAC 地址的映射，此时主机 A 通过广播的方式发送 ARP 请求分组，主机 B 收到该请求后会发送 ARP 响应分组给主机 A 告知其 MAC 地址，随后主机 A 向其高速缓存中写入主机 B 的 IP 地址到 MAC 地址的映射。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/5d95edea7325dae076f51fd76cbca2ac7c72cf75a3a5f721dad16f5c5977dc13/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38303036613435302d366332662d343938632d613932382d6339323766373538623164302e706e67"><img src="https://camo.githubusercontent.com/5d95edea7325dae076f51fd76cbca2ac7c72cf75a3a5f721dad16f5c5977dc13/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38303036613435302d366332662d343938632d613932382d6339323766373538623164302e706e67" alt="img"></a></p>
-<h2 id="网际控制报文协议-ICMP"><a href="#网际控制报文协议-ICMP" class="headerlink" title="网际控制报文协议 ICMP"></a>网际控制报文协议 ICMP</h2><p>ICMP 是为了更有效地转发 IP 数据报和提高交付成功的机会。它封装在 IP 数据报中，但是不属于高层协议。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/598b24c2dbb1cd72db45501ace7efcc7754b40267a96c78299ad2e56b70045bf/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65333132343736332d663735652d343663332d626138322d3334316536633938643836322e6a7067"><img src="https://camo.githubusercontent.com/598b24c2dbb1cd72db45501ace7efcc7754b40267a96c78299ad2e56b70045bf/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65333132343736332d663735652d343663332d626138322d3334316536633938643836322e6a7067" alt="img"></a></p>
-<p>ICMP 报文分为差错报告报文和询问报文。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/e32adca8dddfd5414550c58747a21d8ca2bdd6ae0e785258f9cbbcff6c85cefc/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61613239636338382d373235362d343339392d386337662d3363663461363438393535392e706e67"><img src="https://camo.githubusercontent.com/e32adca8dddfd5414550c58747a21d8ca2bdd6ae0e785258f9cbbcff6c85cefc/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61613239636338382d373235362d343339392d386337662d3363663461363438393535392e706e67" alt="img"></a></p>
-<h3 id="1-Ping"><a href="#1-Ping" class="headerlink" title="1. Ping"></a>1. Ping</h3><p>Ping 是 ICMP 的一个重要应用，主要用来测试两台主机之间的连通性。</p>
-<p>Ping 的原理是通过向目的主机发送 ICMP Echo 请求报文，目的主机收到之后会发送 Echo 回答报文。Ping 会根据时间和成功响应的次数估算出数据包往返时间以及丢包率。</p>
-<h3 id="2-Traceroute"><a href="#2-Traceroute" class="headerlink" title="2. Traceroute"></a>2. Traceroute</h3><p>Traceroute 是 ICMP 的另一个应用，用来跟踪一个分组从源点到终点的路径。</p>
-<p>Traceroute 发送的 IP 数据报封装的是无法交付的 UDP 用户数据报，并由目的主机发送终点不可达差错报告报文。</p>
-<ul>
-<li>源主机向目的主机发送一连串的 IP 数据报。第一个数据报 P1 的生存时间 TTL 设置为 1，当 P1 到达路径上的第一个路由器 R1 时，R1 收下它并把 TTL 减 1，此时 TTL 等于 0，R1 就把 P1 丢弃，并向源主机发送一个 ICMP 时间超过差错报告报文；</li>
-<li>源主机接着发送第二个数据报 P2，并把 TTL 设置为 2。P2 先到达 R1，R1 收下后把 TTL 减 1 再转发给 R2，R2 收下后也把 TTL 减 1，由于此时 TTL 等于 0，R2 就丢弃 P2，并向源主机发送一个 ICMP 时间超过差错报文。</li>
-<li>不断执行这样的步骤，直到最后一个数据报刚刚到达目的主机，主机不转发数据报，也不把 TTL 值减 1。但是因为数据报封装的是无法交付的 UDP，因此目的主机要向源主机发送 ICMP 终点不可达差错报告报文。</li>
-<li>之后源主机知道了到达目的主机所经过的路由器 IP 地址以及到达每个路由器的往返时间。</li>
-</ul>
-<h2 id="虚拟专用网-VPN"><a href="#虚拟专用网-VPN" class="headerlink" title="虚拟专用网 VPN"></a>虚拟专用网 VPN</h2><p>由于 IP 地址的紧缺，一个机构能申请到的 IP 地址数往往远小于本机构所拥有的主机数。并且一个机构并不需要把所有的主机接入到外部的互联网中，机构内的计算机可以使用仅在本机构有效的 IP 地址（专用地址）。</p>
-<p>有三个专用地址块：</p>
-<ul>
-<li>10.0.0.0 ~ 10.255.255.255</li>
-<li>172.16.0.0 ~ 172.31.255.255</li>
-<li>192.168.0.0 ~ 192.168.255.255</li>
-</ul>
-<p>VPN 使用公用的互联网作为本机构各专用网之间的通信载体。专用指机构内的主机只与本机构内的其它主机通信；虚拟指好像是，而实际上并不是，它有经过公用的互联网。</p>
-<p>下图中，场所 A 和 B 的通信经过互联网，如果场所 A 的主机 X 要和另一个场所 B 的主机 Y 通信，IP 数据报的源地址是 10.1.0.1，目的地址是 10.2.0.3。数据报先发送到与互联网相连的路由器 R1，R1 对内部数据进行加密，然后重新加上数据报的首部，源地址是路由器 R1 的全球地址 125.1.2.3，目的地址是路由器 R2 的全球地址 194.4.5.6。路由器 R2 收到数据报后将数据部分进行解密，恢复原来的数据报，此时目的地址为 10.2.0.3，就交付给 Y。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/9ceca295b4ddcd4eed95c2ce30c2dcb77a0a63c876fbb5c207231124b50d81c0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31353536373730622d386330312d343638312d616631302d3436663164663639323032632e6a7067"><img src="https://camo.githubusercontent.com/9ceca295b4ddcd4eed95c2ce30c2dcb77a0a63c876fbb5c207231124b50d81c0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31353536373730622d386330312d343638312d616631302d3436663164663639323032632e6a7067" alt="img"></a></p>
-<h2 id="网络地址转换-NAT"><a href="#网络地址转换-NAT" class="headerlink" title="网络地址转换 NAT"></a>网络地址转换 NAT</h2><p>专用网内部的主机使用本地 IP 地址又想和互联网上的主机通信时，可以使用 NAT 来将本地 IP 转换为全球 IP。</p>
-<p>在以前，NAT 将本地 IP 和全球 IP 一一对应，这种方式下拥有 n 个全球 IP 地址的专用网内最多只可以同时有 n 台主机接入互联网。为了更有效地利用全球 IP 地址，现在常用的 NAT 转换表把传输层的端口号也用上了，使得多个专用网内部的主机共用一个全球 IP 地址。使用端口号的 NAT 也叫做网络地址与端口转换 NAPT。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/2f364857cd2c2a3659e312997b8f3f1809417aeabf23f20d2f3c2f980597b9c5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32373139303637652d623239392d343633392d393036352d6265643637323964626630622e706e67"><img src="https://camo.githubusercontent.com/2f364857cd2c2a3659e312997b8f3f1809417aeabf23f20d2f3c2f980597b9c5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32373139303637652d623239392d343633392d393036352d6265643637323964626630622e706e67" alt="img"></a></p>
-<h2 id="路由器的结构"><a href="#路由器的结构" class="headerlink" title="路由器的结构"></a>路由器的结构</h2><p>路由器从功能上可以划分为：路由选择和分组转发。</p>
-<p>分组转发结构由三个部分组成：交换结构、一组输入端口和一组输出端口。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/3ceb80818b72ef6e68f511bee3ccf2ead93784a533e317757dab1bbad290f3d4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63333336393037322d633734302d343362302d623237362d3230326264316433393630642e6a7067"><img src="https://camo.githubusercontent.com/3ceb80818b72ef6e68f511bee3ccf2ead93784a533e317757dab1bbad290f3d4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f63333336393037322d633734302d343362302d623237362d3230326264316433393630642e6a7067" alt="img"></a></p>
-<h2 id="路由器分组转发流程"><a href="#路由器分组转发流程" class="headerlink" title="路由器分组转发流程"></a>路由器分组转发流程</h2><ul>
-<li>从数据报的首部提取目的主机的 IP 地址 D，得到目的网络地址 N。</li>
-<li>若 N 就是与此路由器直接相连的某个网络地址，则进行直接交付；</li>
-<li>若路由表中有目的地址为 D 的特定主机路由，则把数据报传送给表中所指明的下一跳路由器；</li>
-<li>若路由表中有到达网络 N 的路由，则把数据报传送给路由表中所指明的下一跳路由器；</li>
-<li>若路由表中有一个默认路由，则把数据报传送给路由表中所指明的默认路由器；</li>
-<li>报告转发分组出错。</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/d51a766109f3ba1cd84594d8a8b4edbea27ce791634f16475949d5017921c5fa/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31616234396533392d303132622d343338332d383238342d3236353730393837653363342e6a7067"><img src="https://camo.githubusercontent.com/d51a766109f3ba1cd84594d8a8b4edbea27ce791634f16475949d5017921c5fa/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31616234396533392d303132622d343338332d383238342d3236353730393837653363342e6a7067" alt="img"></a></p>
-<h2 id="路由选择协议"><a href="#路由选择协议" class="headerlink" title="路由选择协议"></a>路由选择协议</h2><p>路由选择协议都是自适应的，能随着网络通信量和拓扑结构的变化而自适应地进行调整。</p>
-<p>互联网可以划分为许多较小的自治系统 AS，一个 AS 可以使用一种和别的 AS 不同的路由选择协议。</p>
-<p>可以把路由选择协议划分为两大类：</p>
-<ul>
-<li>自治系统内部的路由选择：RIP 和 OSPF</li>
-<li>自治系统间的路由选择：BGP</li>
-</ul>
-<h3 id="1-内部网关协议-RIP"><a href="#1-内部网关协议-RIP" class="headerlink" title="1. 内部网关协议 RIP"></a>1. 内部网关协议 RIP</h3><p>RIP 是一种基于距离向量的路由选择协议。距离是指跳数，直接相连的路由器跳数为 1。跳数最多为 15，超过 15 表示不可达。</p>
-<p>RIP 按固定的时间间隔仅和相邻路由器交换自己的路由表，经过若干次交换之后，所有路由器最终会知道到达本自治系统中任何一个网络的最短距离和下一跳路由器地址。</p>
-<p>距离向量算法：</p>
-<ul>
-<li>对地址为 X 的相邻路由器发来的 RIP 报文，先修改报文中的所有项目，把下一跳字段中的地址改为 X，并把所有的距离字段加 1；</li>
-<li>对修改后的 RIP 报文中的每一个项目，进行以下步骤：</li>
-<li>若原来的路由表中没有目的网络 N，则把该项目添加到路由表中；</li>
-<li>否则：若下一跳路由器地址是 X，则把收到的项目替换原来路由表中的项目；否则：若收到的项目中的距离 d 小于路由表中的距离，则进行更新（例如原始路由表项为 Net2, 5, P，新表项为 Net2, 4, X，则更新）；否则什么也不做。</li>
-<li>若 3 分钟还没有收到相邻路由器的更新路由表，则把该相邻路由器标为不可达，即把距离置为 16。</li>
-</ul>
-<p>RIP 协议实现简单，开销小。但是 RIP 能使用的最大距离为 15，限制了网络的规模。并且当网络出现故障时，要经过比较长的时间才能将此消息传送到所有路由器。</p>
-<h3 id="2-内部网关协议-OSPF"><a href="#2-内部网关协议-OSPF" class="headerlink" title="2. 内部网关协议 OSPF"></a>2. 内部网关协议 OSPF</h3><p>开放最短路径优先 OSPF，是为了克服 RIP 的缺点而开发出来的。</p>
-<p>开放表示 OSPF 不受某一家厂商控制，而是公开发表的；最短路径优先表示使用了 Dijkstra 提出的最短路径算法 SPF。</p>
-<p>OSPF 具有以下特点：</p>
-<ul>
-<li>向本自治系统中的所有路由器发送信息，这种方法是洪泛法。</li>
-<li>发送的信息就是与相邻路由器的链路状态，链路状态包括与哪些路由器相连以及链路的度量，度量用费用、距离、时延、带宽等来表示。</li>
-<li>只有当链路状态发生变化时，路由器才会发送信息。</li>
-</ul>
-<p>所有路由器都具有全网的拓扑结构图，并且是一致的。相比于 RIP，OSPF 的更新过程收敛的很快。</p>
-<h3 id="3-外部网关协议-BGP"><a href="#3-外部网关协议-BGP" class="headerlink" title="3. 外部网关协议 BGP"></a>3. 外部网关协议 BGP</h3><p>BGP（Border Gateway Protocol，边界网关协议）</p>
-<p>AS 之间的路由选择很困难，主要是由于：</p>
-<ul>
-<li>互联网规模很大；</li>
-<li>各个 AS 内部使用不同的路由选择协议，无法准确定义路径的度量；</li>
-<li>AS 之间的路由选择必须考虑有关的策略，比如有些 AS 不愿意让其它 AS 经过。</li>
-</ul>
-<p>BGP 只能寻找一条比较好的路由，而不是最佳路由。</p>
-<p>每个 AS 都必须配置 BGP 发言人，通过在两个相邻 BGP 发言人之间建立 TCP 连接来交换路由信息。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/6e2e739f44205b054234ea2b1f8f9c5102145f27370183bd97e6951cfa0440c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39636430616532302d346662352d343031372d613030302d6637643361306562333532392e706e67"><img src="https://camo.githubusercontent.com/6e2e739f44205b054234ea2b1f8f9c5102145f27370183bd97e6951cfa0440c4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39636430616532302d346662352d343031372d613030302d6637643361306562333532392e706e67" alt="img"></a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E9%93%BE%E8%B7%AF%E5%B1%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
-      <meta itemprop="name" content="春去春来">
-      <meta itemprop="description" content="登峰造极境">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="RISE">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E9%93%BE%E8%B7%AF%E5%B1%82/" class="post-title-link" itemprop="url">计算机网络—链路层</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-09-04 12:16:22 / 修改时间：12:28:05" itemprop="dateCreated datePublished" datetime="2022-09-04T12:16:22+08:00">2022-09-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><u>转载文章</u></p>
-<p>[CS-Notes&#x2F;计算机网络 - 链路层.md at master · CyC2018&#x2F;CS-Notes (github.com)](<a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络</a> - 链路层.md)</p>
-<h1 id="计算机网络-链路层"><a href="#计算机网络-链路层" class="headerlink" title="计算机网络 - 链路层"></a>计算机网络 - 链路层</h1><h2 id="基本问题"><a href="#基本问题" class="headerlink" title="基本问题"></a>基本问题</h2><h3 id="1-封装成帧"><a href="#1-封装成帧" class="headerlink" title="1. 封装成帧"></a>1. 封装成帧</h3><p>将网络层传下来的分组添加首部和尾部，用于标记帧的开始和结束。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/551e9f606715b922d4fcbbe44a621ea576b11d821b0afaf245d7fd1a9b51bf5e/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32396131343733352d653135342d346636302d396130342d6339363238653564303966342e706e67"><img src="https://camo.githubusercontent.com/551e9f606715b922d4fcbbe44a621ea576b11d821b0afaf245d7fd1a9b51bf5e/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f32396131343733352d653135342d346636302d396130342d6339363238653564303966342e706e67" alt="img"></a></p>
-<h3 id="2-透明传输"><a href="#2-透明传输" class="headerlink" title="2. 透明传输"></a>2. 透明传输</h3><p>透明表示一个实际存在的事物看起来好像不存在一样。</p>
-<p>帧使用首部和尾部进行定界，如果帧的数据部分含有和首部尾部相同的内容，那么帧的开始和结束位置就会被错误的判定。需要在数据部分出现首部尾部相同的内容前面插入转义字符。如果数据部分出现转义字符，那么就在转义字符前面再加个转义字符。在接收端进行处理之后可以还原出原始数据。这个过程透明传输的内容是转义字符，用户察觉不到转义字符的存在。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/17cd3fd93247eb9ff87607c5a57abde10c0c5b41ea1d07fb3b21a4788771e6f4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65373338613364322d663432652d343735352d616531332d6361323334393765376139372e706e67"><img src="https://camo.githubusercontent.com/17cd3fd93247eb9ff87607c5a57abde10c0c5b41ea1d07fb3b21a4788771e6f4/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65373338613364322d663432652d343735352d616531332d6361323334393765376139372e706e67" alt="img"></a></p>
-<h3 id="3-差错检测"><a href="#3-差错检测" class="headerlink" title="3. 差错检测"></a>3. 差错检测</h3><p>目前数据链路层广泛使用了循环冗余检验（CRC）来检查比特差错。</p>
-<h2 id="信道分类"><a href="#信道分类" class="headerlink" title="信道分类"></a>信道分类</h2><h3 id="1-广播信道"><a href="#1-广播信道" class="headerlink" title="1. 广播信道"></a>1. 广播信道</h3><p>一对多通信，一个节点发送的数据能够被广播信道上所有的节点接收到。</p>
-<p>所有的节点都在同一个广播信道上发送数据，因此需要有专门的控制方法进行协调，避免发生冲突（冲突也叫碰撞）。</p>
-<p>主要有两种控制方法进行协调，一个是使用信道复用技术，一是使用 CSMA&#x2F;CD 协议。</p>
-<h3 id="2-点对点信道"><a href="#2-点对点信道" class="headerlink" title="2. 点对点信道"></a>2. 点对点信道</h3><p>一对一通信。</p>
-<p>因为不会发生碰撞，因此也比较简单，使用 PPP 协议进行控制。</p>
-<h2 id="信道复用技术"><a href="#信道复用技术" class="headerlink" title="信道复用技术"></a>信道复用技术</h2><h3 id="1-频分复用"><a href="#1-频分复用" class="headerlink" title="1. 频分复用"></a>1. 频分复用</h3><p>频分复用的所有主机在相同的时间占用不同的频率带宽资源。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/0676830d656ad970afd45b54e01a5f05686d22c164de5af9b21836e798d0cdb0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34616135653035372d626335372d343731392d616235372d6336666263383631633530352e706e67"><img src="https://camo.githubusercontent.com/0676830d656ad970afd45b54e01a5f05686d22c164de5af9b21836e798d0cdb0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f34616135653035372d626335372d343731392d616235372d6336666263383631633530352e706e67" alt="img"></a></p>
-<h3 id="2-时分复用"><a href="#2-时分复用" class="headerlink" title="2. 时分复用"></a>2. 时分复用</h3><p>时分复用的所有主机在不同的时间占用相同的频率带宽资源。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/7faef2d62ae734e6f4362c99fdbd33ebc168c719d5ab49921c6d99d330f5ab7a/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36373538326164652d643434612d343661362d383735372d3363313239366363316566392e706e67"><img src="https://camo.githubusercontent.com/7faef2d62ae734e6f4362c99fdbd33ebc168c719d5ab49921c6d99d330f5ab7a/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36373538326164652d643434612d343661362d383735372d3363313239366363316566392e706e67" alt="img"></a></p>
-<p>使用频分复用和时分复用进行通信，在通信的过程中主机会一直占用一部分信道资源。但是由于计算机数据的突发性质，通信过程没必要一直占用信道资源而不让出给其它用户使用，因此这两种方式对信道的利用率都不高。</p>
-<h3 id="3-统计时分复用"><a href="#3-统计时分复用" class="headerlink" title="3. 统计时分复用"></a>3. 统计时分复用</h3><p>是对时分复用的一种改进，不固定每个用户在时分复用帧中的位置，只要有数据就集中起来组成统计时分复用帧然后发送。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/93bb1a834d92cdf7015182fbd04062dc59fc2d451c34334bd226b7429e00d9f5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36323833626532612d383134612d346131302d383462662d3935393235333366653662632e706e67"><img src="https://camo.githubusercontent.com/93bb1a834d92cdf7015182fbd04062dc59fc2d451c34334bd226b7429e00d9f5/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36323833626532612d383134612d346131302d383462662d3935393235333366653662632e706e67" alt="img"></a></p>
-<h3 id="4-波分复用"><a href="#4-波分复用" class="headerlink" title="4. 波分复用"></a>4. 波分复用</h3><p>光的频分复用。由于光的频率很高，因此习惯上用波长而不是频率来表示所使用的光载波。</p>
-<h3 id="5-码分复用"><a href="#5-码分复用" class="headerlink" title="5. 码分复用"></a>5. 码分复用</h3><p>为每个用户分配 m bit 的码片，并且所有的码片正交，对于任意两个码片 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d"><img src="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d" alt="img"></a> 和 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/6bb6f35a4d875ec06aaac352bc3d40e053dad7629c060df62cfd75d0fdd5499a/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b547d"><img src="https://camo.githubusercontent.com/6bb6f35a4d875ec06aaac352bc3d40e053dad7629c060df62cfd75d0fdd5499a/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b547d" alt="img"></a> 有</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/8b08ea3e94cc2d91bf6b52fc37521822bbc4700ed634ce3528280afcd33ebe0a/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33303861303265392d333334362d343235312d386334312d6264353533366461623439312e706e67"><img src="https://camo.githubusercontent.com/8b08ea3e94cc2d91bf6b52fc37521822bbc4700ed634ce3528280afcd33ebe0a/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f33303861303265392d333334362d343235312d386334312d6264353533366461623439312e706e67" alt="img"></a></p>
-<p>为了讨论方便，取 m&#x3D;8，设码片 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d"><img src="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d" alt="img"></a> 为 00011011。在拥有该码片的用户发送比特 1 时就发送该码片，发送比特 0 时就发送该码片的反码 11100100。</p>
-<p>在计算时将 00011011 记作 (-1 -1 -1 +1 +1 -1 +1 +1)，可以得到</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/20bfc9ae0eb159cbc40db2c489d61b29cddd25f2feadbb9e01942ab480e2714f/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36666461316463372d356337342d343963312d626237392d3233376137376534336134332e706e67"><img src="https://camo.githubusercontent.com/20bfc9ae0eb159cbc40db2c489d61b29cddd25f2feadbb9e01942ab480e2714f/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f36666461316463372d356337342d343963312d626237392d3233376137376534336134332e706e67" alt="img"></a></p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/e4073a0b2729615fb14e7cbfbfc3a21640ef0242823584675bba639efcb4d165/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65333235613930332d663062312d346662642d383262662d3838393133646332663239302e706e67"><img src="https://camo.githubusercontent.com/e4073a0b2729615fb14e7cbfbfc3a21640ef0242823584675bba639efcb4d165/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65333235613930332d663062312d346662642d383262662d3838393133646332663239302e706e67" alt="img"></a></p>
-<p>其中 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/a7954229c9a5a18fd7973cf9ef50a1d518ba7c7b75ab6ff67c1947533ee918be/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b53277d"><img src="https://camo.githubusercontent.com/a7954229c9a5a18fd7973cf9ef50a1d518ba7c7b75ab6ff67c1947533ee918be/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b53277d" alt="img"></a> 为 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d"><img src="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d" alt="img"></a> 的反码。</p>
-<p>利用上面的式子我们知道，当接收端使用码片 <a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d"><img src="https://camo.githubusercontent.com/cb19d7914e289404e5bd587c0aaec7d424c2d324e71496250e468043272e9a08/68747470733a2f2f6c617465782e636f6465636f67732e636f6d2f6769662e6c617465783f5c7665637b537d" alt="img"></a> 对接收到的数据进行内积运算时，结果为 0 的是其它用户发送的数据，结果为 1 的是用户发送的比特 1，结果为 -1 的是用户发送的比特 0。</p>
-<p>码分复用需要发送的数据量为原先的 m 倍。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/624c6f658c33a6f14a7dde4854eee74190f30896d08c24684501ab448355aed0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39396236303630652d303939642d343230312d386538362d6638616233373638613763662e706e67"><img src="https://camo.githubusercontent.com/624c6f658c33a6f14a7dde4854eee74190f30896d08c24684501ab448355aed0/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f39396236303630652d303939642d343230312d386538362d6638616233373638613763662e706e67" alt="img"></a></p>
-<h2 id="CSMA-x2F-CD-协议"><a href="#CSMA-x2F-CD-协议" class="headerlink" title="CSMA&#x2F;CD 协议"></a>CSMA&#x2F;CD 协议</h2><p>CSMA&#x2F;CD 表示载波监听多点接入 &#x2F; 碰撞检测。</p>
-<ul>
-<li><strong>多点接入</strong> ：说明这是总线型网络，许多主机以多点的方式连接到总线上。</li>
-<li><strong>载波监听</strong> ：每个主机都必须不停地监听信道。在发送前，如果监听到信道正在使用，就必须等待。</li>
-<li><strong>碰撞检测</strong> ：在发送中，如果监听到信道已有其它主机正在发送数据，就表示发生了碰撞。虽然每个主机在发送数据之前都已经监听到信道为空闲，但是由于电磁波的传播时延的存在，还是有可能会发生碰撞。</li>
-</ul>
-<p>记端到端的传播时延为 τ，最先发送的站点最多经过 2τ 就可以知道是否发生了碰撞，称 2τ 为 <strong>争用期</strong> 。只有经过争用期之后还没有检测到碰撞，才能肯定这次发送不会发生碰撞。</p>
-<p>当发生碰撞时，站点要停止发送，等待一段时间再发送。这个时间采用 <strong>截断二进制指数退避算法</strong> 来确定。从离散的整数集合 {0, 1, .., (2k-1)} 中随机取出一个数，记作 r，然后取 r 倍的争用期作为重传等待时间。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/c9ed7f8c261248c3b519410c1f92a7c760a4fea9c2fac02165f7b33acc6b6259/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31396434323365392d373466372d346332622d396239372d3535383930653064353139332e706e67"><img src="https://camo.githubusercontent.com/c9ed7f8c261248c3b519410c1f92a7c760a4fea9c2fac02165f7b33acc6b6259/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31396434323365392d373466372d346332622d396239372d3535383930653064353139332e706e67" alt="img"></a></p>
-<h2 id="PPP-协议"><a href="#PPP-协议" class="headerlink" title="PPP 协议"></a>PPP 协议</h2><p>互联网用户通常需要连接到某个 ISP 之后才能接入到互联网，PPP 协议是用户计算机和 ISP 进行通信时所使用的数据链路层协议。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/3d9abfb0d155de05ad9de00f28324b7556bfb8d71a090757eda8f36cb714446f/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65316162396632382d636231352d343137382d383462322d3938616164383766396263382e6a7067"><img src="https://camo.githubusercontent.com/3d9abfb0d155de05ad9de00f28324b7556bfb8d71a090757eda8f36cb714446f/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65316162396632382d636231352d343137382d383462322d3938616164383766396263382e6a7067" alt="img"></a></p>
-<p>PPP 的帧格式：</p>
-<ul>
-<li>F 字段为帧的定界符</li>
-<li>A 和 C 字段暂时没有意义</li>
-<li>FCS 字段是使用 CRC 的检验序列</li>
-<li>信息部分的长度不超过 1500</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/14699972272fda58894cd49c8a8935cd4918717367ccbda146f1956db044d86c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37353930313364372d363164382d343530392d383937612d6437356166353938613233362e706e67"><img src="https://camo.githubusercontent.com/14699972272fda58894cd49c8a8935cd4918717367ccbda146f1956db044d86c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f37353930313364372d363164382d343530392d383937612d6437356166353938613233362e706e67" alt="img"></a></p>
-<h2 id="MAC-地址"><a href="#MAC-地址" class="headerlink" title="MAC 地址"></a>MAC 地址</h2><p>MAC 地址是链路层地址，长度为 6 字节（48 位），用于唯一标识网络适配器（网卡）。</p>
-<p>一台主机拥有多少个网络适配器就有多少个 MAC 地址。例如笔记本电脑普遍存在无线网络适配器和有线网络适配器，因此就有两个 MAC 地址。</p>
-<h2 id="局域网"><a href="#局域网" class="headerlink" title="局域网"></a>局域网</h2><p>局域网是一种典型的广播信道，主要特点是网络为一个单位所拥有，且地理范围和站点数目均有限。</p>
-<p>主要有以太网、令牌环网、FDDI 和 ATM 等局域网技术，目前以太网占领着有线局域网市场。</p>
-<p>可以按照网络拓扑结构对局域网进行分类：</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/3dbb3aa31bd0eb11bffd36fdcb47bed553ef9ad9bac5b4a83c7cc3168c05a328/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38303766343235382d646261382d346335342d396333632d6137303763376363666661322e6a7067"><img src="https://camo.githubusercontent.com/3dbb3aa31bd0eb11bffd36fdcb47bed553ef9ad9bac5b4a83c7cc3168c05a328/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f38303766343235382d646261382d346335342d396333632d6137303763376363666661322e6a7067" alt="img"></a></p>
-<h2 id="以太网"><a href="#以太网" class="headerlink" title="以太网"></a>以太网</h2><p>以太网是一种星型拓扑结构局域网。</p>
-<p>早期使用集线器进行连接，集线器是一种物理层设备， 作用于比特而不是帧，当一个比特到达接口时，集线器重新生成这个比特，并将其能量强度放大，从而扩大网络的传输距离，之后再将这个比特发送到其它所有接口。如果集线器同时收到两个不同接口的帧，那么就发生了碰撞。</p>
-<p>目前以太网使用交换机替代了集线器，交换机是一种链路层设备，它不会发生碰撞，能根据 MAC 地址进行存储转发。</p>
-<p>以太网帧格式：</p>
-<ul>
-<li><strong>类型</strong> ：标记上层使用的协议；</li>
-<li><strong>数据</strong> ：长度在 46-1500 之间，如果太小则需要填充；</li>
-<li><strong>FCS</strong> ：帧检验序列，使用的是 CRC 检验方法；</li>
-</ul>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/fcb8e6e98d8af8c07ae013fde39d37f21ff4bb292d1065dbc50fa7eeb0060f2c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31363439343464332d626264322d346262322d393234622d6536323139396335316239302e706e67"><img src="https://camo.githubusercontent.com/fcb8e6e98d8af8c07ae013fde39d37f21ff4bb292d1065dbc50fa7eeb0060f2c/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f31363439343464332d626264322d346262322d393234622d6536323139396335316239302e706e67" alt="img"></a></p>
-<h2 id="交换机"><a href="#交换机" class="headerlink" title="交换机"></a>交换机</h2><p>交换机具有自学习能力，学习的是交换表的内容，交换表中存储着 MAC 地址到接口的映射。</p>
-<p>正是由于这种自学习能力，因此交换机是一种即插即用设备，不需要网络管理员手动配置交换表内容。</p>
-<p>下图中，交换机有 4 个接口，主机 A 向主机 B 发送数据帧时，交换机把主机 A 到接口 1 的映射写入交换表中。为了发送数据帧到 B，先查交换表，此时没有主机 B 的表项，那么主机 A 就发送广播帧，主机 C 和主机 D 会丢弃该帧，主机 B 回应该帧向主机 A 发送数据包时，交换机查找交换表得到主机 A 映射的接口为 1，就发送数据帧到接口 1，同时交换机添加主机 B 到接口 2 的映射。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/4608d0909fc1073933ad910d422d38a1aebc48d650f324182e2496d2cf757205/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61343434343534352d306436382d343031352d396133642d3139323039646334333662332e706e67"><img src="https://camo.githubusercontent.com/4608d0909fc1073933ad910d422d38a1aebc48d650f324182e2496d2cf757205/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f61343434343534352d306436382d343031352d396133642d3139323039646334333662332e706e67" alt="img"></a></p>
-<h2 id="虚拟局域网"><a href="#虚拟局域网" class="headerlink" title="虚拟局域网"></a>虚拟局域网</h2><p>虚拟局域网可以建立与物理位置无关的逻辑组，只有在同一个虚拟局域网中的成员才会收到链路层广播信息。</p>
-<p>例如下图中 (A1, A2, A3, A4) 属于一个虚拟局域网，A1 发送的广播会被 A2、A3、A4 收到，而其它站点收不到。</p>
-<p>使用 VLAN 干线连接来建立虚拟局域网，每台交换机上的一个特殊接口被设置为干线接口，以互连 VLAN 交换机。IEEE 定义了一种扩展的以太网帧格式 802.1Q，它在标准以太网帧上加进了 4 字节首部 VLAN 标签，用于表示该帧属于哪一个虚拟局域网。</p>
-<p><a target="_blank" rel="noopener" href="https://camo.githubusercontent.com/56983a4d00d059a8c0c8889611d24e5a09a27db92f48692ed402862d21eb5f5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65393865396432302d323036622d343533332d626163662d3334343864303039366633382e706e67"><img src="https://camo.githubusercontent.com/56983a4d00d059a8c0c8889611d24e5a09a27db92f48692ed402862d21eb5f5b/68747470733a2f2f63732d6e6f7465732d313235363130393739362e636f732e61702d6775616e677a686f752e6d7971636c6f75642e636f6d2f65393865396432302d323036622d343533332d626163662d3334343864303039366633382e706e67" alt="img"></a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -2402,7 +2167,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
