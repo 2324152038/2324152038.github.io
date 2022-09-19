@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="database&#x2F;sql 接口Go 与 PHP 不同的地方是 Go 官方没有提供数据库驱动，而是为开发数据库驱动定义了一些标准接口，开发者可以根据定义的接口来开发相应的数据库驱动，这样做有一个好处，只要是按照标准接口开发的代码， 以后需要迁移数据库时，不需要任何修改。那么 Go 都定义了哪些标准接口呢？让我们来详细的分析一下 sql.Register这个存在于 database&amp;#x2F">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10.database&#x2F;sql接口">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/19/10.database%E6%8E%A5%E5%8F%A3/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="database&#x2F;sql 接口Go 与 PHP 不同的地方是 Go 官方没有提供数据库驱动，而是为开发数据库驱动定义了一些标准接口，开发者可以根据定义的接口来开发相应的数据库驱动，这样做有一个好处，只要是按照标准接口开发的代码， 以后需要迁移数据库时，不需要任何修改。那么 Go 都定义了哪些标准接口呢？让我们来详细的分析一下 sql.Register这个存在于 database&amp;#x2F">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-19T04:00:05.000Z">
+<meta property="article:modified_time" content="2022-09-19T04:28:39.398Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/19/10.database%E6%8E%A5%E5%8F%A3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>10.database/sql接口 | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/19/10.database%E6%8E%A5%E5%8F%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          10.database/sql接口
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-19 12:00:05 / 修改时间：12:28:39" itemprop="dateCreated datePublished" datetime="2022-09-19T12:00:05+08:00">2022-09-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="database-x2F-sql-接口"><a href="#database-x2F-sql-接口" class="headerlink" title="database&#x2F;sql 接口"></a>database&#x2F;sql 接口</h1><p>Go 与 PHP 不同的地方是 Go 官方没有提供数据库驱动，而是为开发数据库驱动定义了一些标准接口，开发者可以根据定义的接口来开发相应的数据库驱动，这样做有一个好处，只要是按照标准接口开发的代码， 以后需要迁移数据库时，不需要任何修改。那么 Go 都定义了哪些标准接口呢？让我们来详细的分析一下</p>
+<h2 id="sql-Register"><a href="#sql-Register" class="headerlink" title="sql.Register"></a>sql.Register</h2><p>这个存在于 database&#x2F;sql 的函数是用来注册数据库驱动的，当第三方开发者开发数据库驱动时，都会实现 init 函数，在 init 里面会调用这个 Register(name string, driver driver.Driver) 完成本驱动的注册。</p>
+<p>我们来看一下 mymysql、sqlite3 的驱动里面都是怎么调用的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/mattn/go-sqlite3 驱动</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    sql.Register(<span class="string">&quot;sqlite3&quot;</span>, &amp;SQLiteDriver&#123;&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://github.com/mikespook/mymysql 驱动</span></span><br><span class="line"><span class="comment">// Driver automatically registered in database/sql</span></span><br><span class="line"><span class="keyword">var</span> d = Driver&#123;proto: <span class="string">&quot;tcp&quot;</span>, raddr: <span class="string">&quot;127.0.0.1:3306&quot;</span>&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    Register(<span class="string">&quot;SET NAMES utf8&quot;</span>)</span><br><span class="line">    sql.Register(<span class="string">&quot;mymysql&quot;</span>, &amp;d)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看到第三方数据库驱动都是通过调用这个函数来注册自己的数据库驱动名称以及相应的 driver 实现。在 database&#x2F;sql 内部通过一个 map 来存储用户定义的相应驱动。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> drivers = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]driver.Driver)</span><br><span class="line"></span><br><span class="line">drivers[name] = driver</span><br></pre></td></tr></table></figure>
+
+<p>因此通过 database&#x2F;sql 的注册函数可以同时注册多个数据库驱动，只要不重复。</p>
+<h2 id="driver-Driver"><a href="#driver-Driver" class="headerlink" title="driver.Driver"></a>driver.Driver</h2><p>Driver 是一个数据库驱动的接口，他定义了一个 method： Open (name string)，这个方法返回一个数据库的 Conn 接口。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Driver <span class="keyword">interface</span> &#123;</span><br><span class="line">    Open(name <span class="type">string</span>) (Conn, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>返回的 Conn 只能用来进行一次 goroutine 的操作，也就是说不能把这个 Conn 应用于 Go 的多个 goroutine 里面。如下代码会出现错误</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">go</span> goroutineA (Conn)  <span class="comment">// 执行查询操作</span></span><br><span class="line"><span class="keyword">go</span> goroutineB (Conn)  <span class="comment">// 执行插入操作</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>上面这样的代码可能会使 Go 不知道某个操作究竟是由哪个 goroutine 发起的，从而导致数据混乱，比如可能会把 goroutineA 里面执行的查询操作的结果返回给 goroutineB 从而使 B 错误地把此结果当成自己执行的插入数据。</p>
+<p>第三方驱动都会定义这个函数，它会解析 name 参数来获取相关数据库的连接信息，解析完成后，它将使用此信息来初始化一个 Conn 并返回它。</p>
+<h2 id="driver-Conn"><a href="#driver-Conn" class="headerlink" title="driver.Conn"></a>driver.Conn</h2><p>Conn 是一个数据库连接的接口定义，他定义了一系列方法，这个 Conn 只能应用在一个 goroutine 里面，不能使用在多个 goroutine 里面，详情请参考上面的说明。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Conn <span class="keyword">interface</span> &#123;</span><br><span class="line">    Prepare(query <span class="type">string</span>) (Stmt, <span class="type">error</span>)</span><br><span class="line">    Close() <span class="type">error</span></span><br><span class="line">    Begin() (Tx, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Prepare 函数返回与当前连接相关的执行 Sql 语句的准备状态，可以进行查询、删除等操作。</p>
+<p>Close 函数关闭当前的连接，执行释放连接拥有的资源等清理工作。因为驱动实现了 database&#x2F;sql 里面建议的 conn pool，所以你不用再去实现缓存 conn 之类的，这样会容易引起问题。</p>
+<p>Begin 函数返回一个代表事务处理的 Tx，通过它你可以进行查询，更新等操作，或者对事务进行回滚、递交。</p>
+<h2 id="driver-Stmt"><a href="#driver-Stmt" class="headerlink" title="driver.Stmt"></a>driver.Stmt</h2><p>Stmt 是一种准备好的状态，和 Conn 相关联，而且只能应用于一个 goroutine 中，不能应用于多个 goroutine。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Stmt <span class="keyword">interface</span> &#123;</span><br><span class="line">    Close() <span class="type">error</span></span><br><span class="line">    NumInput() <span class="type">int</span></span><br><span class="line">    Exec(args []Value) (Result, <span class="type">error</span>)</span><br><span class="line">    Query(args []Value) (Rows, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Close 函数关闭当前的链接状态，但是如果当前正在执行 query，query 还是有效返回 rows 数据。</p>
+<p>NumInput 函数返回当前预留参数的个数，当返回 &gt;&#x3D;0 时数据库驱动就会智能检查调用者的参数。当数据库驱动包不知道预留参数的时候，返回 -1。</p>
+<p>Exec 函数执行 Prepare 准备好的 sql，传入参数执行 update&#x2F;insert 等操作，返回 Result 数据</p>
+<p>Query 函数执行 Prepare 准备好的 sql，传入需要的参数执行 select 操作，返回 Rows 结果集</p>
+<h2 id="driver-Tx"><a href="#driver-Tx" class="headerlink" title="driver.Tx"></a>driver.Tx</h2><p>事务处理一般就两个过程，递交或者回滚。数据库驱动里面也只需要实现这两个函数就可以</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Tx <span class="keyword">interface</span> &#123;</span><br><span class="line">    Commit() <span class="type">error</span></span><br><span class="line">    Rollback() <span class="type">error</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这两个函数一个用来递交一个事务，一个用来回滚事务。</p>
+<h2 id="driver-Execer"><a href="#driver-Execer" class="headerlink" title="driver.Execer"></a>driver.Execer</h2><p>这是一个 Conn 可选择实现的接口</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Execer <span class="keyword">interface</span> &#123;</span><br><span class="line">    Exec(query <span class="type">string</span>, args []Value) (Result, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果这个接口没有定义，那么在调用 DB.Exec, 就会首先调用 Prepare 返回 Stmt，然后执行 Stmt 的 Exec，然后关闭 Stmt。</p>
+<h2 id="driver-Result"><a href="#driver-Result" class="headerlink" title="driver.Result"></a>driver.Result</h2><p>这个是执行 Update&#x2F;Insert 等操作返回的结果接口定义</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Result <span class="keyword">interface</span> &#123;</span><br><span class="line">    LastInsertId() (<span class="type">int64</span>, <span class="type">error</span>)</span><br><span class="line">    RowsAffected() (<span class="type">int64</span>, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LastInsertId 函数返回由数据库执行插入操作得到的自增 ID 号。</p>
+<p>RowsAffected 函数返回 query 操作影响的数据条目数。</p>
+<h2 id="driver-Rows"><a href="#driver-Rows" class="headerlink" title="driver.Rows"></a>driver.Rows</h2><p>Rows 是执行查询返回的结果集接口定义</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Rows <span class="keyword">interface</span> &#123;</span><br><span class="line">    Columns() []<span class="type">string</span></span><br><span class="line">    Close() <span class="type">error</span></span><br><span class="line">    Next(dest []Value) <span class="type">error</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Columns 函数返回查询数据库表的字段信息，这个返回的 slice 和 sql 查询的字段一一对应，而不是返回整个表的所有字段。</p>
+<p>Close 函数用来关闭 Rows 迭代器。</p>
+<p>Next 函数用来返回下一条数据，把数据赋值给 dest。dest 里面的元素必须是 driver.Value 的值除了 string，返回的数据里面所有的 string 都必须要转换成 [] byte。如果最后没数据了，Next 函数最后返回 io.EOF。</p>
+<h2 id="driver-RowsAffected"><a href="#driver-RowsAffected" class="headerlink" title="driver.RowsAffected"></a>driver.RowsAffected</h2><p>RowsAffected 其实就是一个 int64 的别名，但是他实现了 Result 接口，用来底层实现 Result 的表示方式</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> RowsAffected <span class="type">int64</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(RowsAffected)</span></span> LastInsertId() (<span class="type">int64</span>, <span class="type">error</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v RowsAffected)</span></span> RowsAffected() (<span class="type">int64</span>, <span class="type">error</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="driver-Value"><a href="#driver-Value" class="headerlink" title="driver.Value"></a>driver.Value</h2><p>Value 其实就是一个空接口，他可以容纳任何的数据</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Value <span class="keyword">interface</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>drive 的 Value 是驱动必须能够操作的 Value，Value 要么是 nil，要么是下面的任意一种</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int64</span></span><br><span class="line"><span class="type">float64</span></span><br><span class="line"><span class="type">bool</span></span><br><span class="line">[]<span class="type">byte</span></span><br><span class="line"><span class="type">string</span>   [*]除了Rows.Next 返回的不能是 <span class="type">string</span>.</span><br><span class="line">time.Time</span><br></pre></td></tr></table></figure>
+
+<h2 id="driver-ValueConverter"><a href="#driver-ValueConverter" class="headerlink" title="driver.ValueConverter"></a>driver.ValueConverter</h2><p>ValueConverter 接口定义了如何把一个普通的值转化成 driver.Value 的接口</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ValueConverter <span class="keyword">interface</span> &#123;</span><br><span class="line">    ConvertValue(v <span class="keyword">interface</span>&#123;&#125;) (Value, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在开发的数据库驱动包里面实现这个接口的函数在很多地方会使用到，这个 ValueConverter 有很多好处：</p>
+<p>转化 driver.value 到数据库表相应的字段，例如 int64 的数据如何转化成数据库表 uint16 字段<br>把数据库查询结果转化成 driver.Value 值<br>在 scan 函数里面如何把 driver.Value 值转化成用户定义的值</p>
+<h2 id="driver-Valuer"><a href="#driver-Valuer" class="headerlink" title="driver.Valuer"></a>driver.Valuer</h2><p>Valuer 接口定义了返回一个 driver.Value 的方式</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Valuer <span class="keyword">interface</span> &#123;</span><br><span class="line">    Value() (Value, <span class="type">error</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很多类型都实现了这个 Value 方法，用来自身与 driver.Value 的转化。</p>
+<p>通过上面的讲解，你应该对于驱动的开发有了一个基本的了解，一个驱动只要实现了这些接口就能完成增删查改等基本操作了，剩下的就是与相应的数据库进行数据交互等细节问题了，在此不再赘述。</p>
+<h2 id="database-x2F-sql"><a href="#database-x2F-sql" class="headerlink" title="database&#x2F;sql"></a>database&#x2F;sql</h2><p>database&#x2F;sql 在 database&#x2F;sql&#x2F;driver 提供的接口基础上定义了一些更高阶的方法，用以简化数据库操作，同时内部还建议性地实现一个 conn pool。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DB <span class="keyword">struct</span> &#123;</span><br><span class="line">    driver   driver.Driver</span><br><span class="line">    dsn      <span class="type">string</span></span><br><span class="line">    mu       sync.Mutex <span class="comment">// protects freeConn and closed</span></span><br><span class="line">    freeConn []driver.Conn</span><br><span class="line">    closed   <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 Open 函数返回的是 DB 对象，里面有一个 freeConn，它就是那个简易的连接池。它的实现相当简单或者说简陋，就是当执行 db.prepare -&gt; db.prepareDC 的时候会 defer dc.releaseConn，然后调用 db.putConn，也就是把这个连接放入连接池，每次调用 db.conn 的时候会先判断 freeConn 的长度是否大于 0，大于 0 说明有可以复用的 conn，直接拿出来用就是了，如果不大于 0，则创建一个 conn，然后再返回之。</p>
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/051-databasesql-interface/3181#440c77">05.1. database&#x2F;sql 接口 | 第五章. 访问数据库 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/18/9-%E9%A2%84%E9%98%B2%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E5%92%8C%E5%A4%84%E7%90%86%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/" rel="prev" title="9.预防跨站脚本和处理文件上传">
+      <i class="fa fa-chevron-left"></i> 9.预防跨站脚本和处理文件上传
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/19/11-%E4%BD%BF%E7%94%A8mysql%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="next" title="11.使用mysql数据库">
+      11.使用mysql数据库 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#database-x2F-sql-%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.</span> <span class="nav-text">database&#x2F;sql 接口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sql-Register"><span class="nav-number">1.1.</span> <span class="nav-text">sql.Register</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Driver"><span class="nav-number">1.2.</span> <span class="nav-text">driver.Driver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Conn"><span class="nav-number">1.3.</span> <span class="nav-text">driver.Conn</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Stmt"><span class="nav-number">1.4.</span> <span class="nav-text">driver.Stmt</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Tx"><span class="nav-number">1.5.</span> <span class="nav-text">driver.Tx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Execer"><span class="nav-number">1.6.</span> <span class="nav-text">driver.Execer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Result"><span class="nav-number">1.7.</span> <span class="nav-text">driver.Result</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Rows"><span class="nav-number">1.8.</span> <span class="nav-text">driver.Rows</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-RowsAffected"><span class="nav-number">1.9.</span> <span class="nav-text">driver.RowsAffected</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Value"><span class="nav-number">1.10.</span> <span class="nav-text">driver.Value</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-ValueConverter"><span class="nav-number">1.11.</span> <span class="nav-text">driver.ValueConverter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#driver-Valuer"><span class="nav-number">1.12.</span> <span class="nav-text">driver.Valuer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#database-x2F-sql"><span class="nav-number">1.13.</span> <span class="nav-text">database&#x2F;sql</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

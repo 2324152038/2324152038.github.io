@@ -157,6 +157,666 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/07/%E5%AD%90%E5%9F%9F%E5%90%8D%E6%94%B6%E9%9B%86%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/07/%E5%AD%90%E5%9F%9F%E5%90%8D%E6%94%B6%E9%9B%86%E5%99%A8/" class="post-title-link" itemprop="url">子域名收集器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-07 13:15:44 / 修改时间：14:03:40" itemprop="dateCreated datePublished" datetime="2022-09-07T13:15:44+08:00">2022-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>这里用到了两个库，requests库，和bs4库，看这一篇文章时，建议先去看看我的另一篇文章：简单爬虫</p>
+<p><a target="_blank" rel="noopener" href="http://chunquchunlai.top/2022/08/27/%E7%AE%80%E5%8D%95%E7%88%AC%E8%99%AB/">简单爬虫 | RISE (chunquchunlai.top)</a></p>
+<p>子域名是某个主域的二级域名或者多级域名，在防御措施严密情况下无法直接拿下主域，那么就可以采用迂回战术拿下子域名，然后无限靠近主域。例如：<a target="_blank" rel="noopener" href="http://www.xxxxx.com主域不存在漏洞,并且防护措施严密,而二级域名/">www.xxxxx.com主域不存在漏洞，并且防护措施严密，而二级域名</a> edu.xxxxx.com存在漏洞，并且防护措施松散，那么就可以采用迂回战术拿下子域名，然后逐步靠近主域。<br>收集子域名的方法有很多，包括DNS历史解析，暴力枚举，第三方网站查询等，这里我们只使用了第三方网站进行查询，然后爬虫爬取。</p>
+<h1 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h1><p>我们来学习一下requests库和bs4库</p>
+<h2 id="—————requests库————"><a href="#—————requests库————" class="headerlink" title="—————requests库————"></a>—————requests库————</h2><p>常用的请求方法</p>
+<p>1.requests.get()</p>
+<p>该方法用于 GET 请求，表示向网站发起请求，获取页面响应对象。语法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">res = requests.get(url,headers=headers,params,timeout)</span><br></pre></td></tr></table></figure>
+
+<p>参数说明如下：<br>url：要抓取的 url 地址。</p>
+<p>headers：用于包装请求头信息。</p>
+<p>params：请求时携带的查询字符串参数。</p>
+<p>timeout：超时时间，超过时间会抛出异常。</p>
+<p>2.requests.post()</p>
+<p>该方法用于 POST 请求，先由用户向目标 url 提交数据，然后服务器返回一个HttpResponse 响应，语法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">response=requests.post(url,headers，data=&#123;请求体的字典&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>url：要抓取的 url 地址。</p>
+<p>headers：用于包装请求头信息。</p>
+<p>data：要传输的数据</p>
+<p>当我们使用 Requests 模块向一个 URL 发起请求后会返回一个 HttpResponse 响应，该对象具有以下常用属性：</p>
+<p>默认是返回状态码</p>
+<p>encoding：查看或者指定响应字符编码<br>url	：      查看请求的 url 地址<br>headers：查看请求头信息<br>cookies： 查看cookies 信息<br>text：        以字符串形式输出<br>content： 以字节流形式输出，若要保存下载图片需使用该属性。</p>
+<h3 id="关于headers信息"><a href="#关于headers信息" class="headerlink" title="关于headers信息"></a>关于headers信息</h3><p>由于requests库本质是发包，所以访问网站时必须带有一些信息，如浏览器信息，cookie信息等，所以这里我们要写入网站url地址和header信息，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">url = &quot;https://www.baidu.com/&quot;  #这里拿百度的地址举例</span><br><span class="line">header = &#123;</span><br><span class="line">   &quot;User-Agent&quot;:&quot;Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 获取header信息我用的是burpsuite，这里的header我只输入了浏览器信息，有些网站可能要求需要cookie等信息，注意header是一个字典信息，要给键和值添加双引号(“”),多个键值对用逗号隔开。（其他获取heade信息的方法可以在网上查询）</p>
+<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/qwesdasd.png"></p>
+<h2 id="——————bs4库——————"><a href="#——————bs4库——————" class="headerlink" title="——————bs4库——————"></a>——————bs4库——————</h2><p>bs4解析对象</p>
+<p>创建 BS4 解析对象是万事开头的第一步，这非常地简单，语法格式如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#导入解析包</span><br><span class="line">from bs4 import BeautifulSoup</span><br><span class="line">#创建beautifulsoup解析对象</span><br><span class="line">soup = BeautifulSoup(html_doc, &#x27;html.parser&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>这串代码中，html_doc 表示要解析的文档 ，html.parser 表示用到的解析器</p>
+<p>bs4常用用法</p>
+<p>1.tag节点</p>
+<p>标签（Tag）是组成 HTML 文档的基本元素。在 BS4 中，通过标签名和标签属性可以提取出想要的内容。</p>
+<p>2.find_all()</p>
+<p>find_all() 方法用来搜索当前 tag 的所有子节点，并判断这些节点是否符合过滤条件，最后以列表形式将符合条件的内容返回，</p>
+<p>3.find()</p>
+<p>find() 方法与 find_all() 类似，不同之处在于 find_all() 会将文档中所有符合条件的结果返回，而 find() 仅返回一个符合条件的结果，所以 find() 方法没有<code>limit</code>参数</p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><p>第一步，导入库</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import requests</span><br><span class="line">from bs4 import BeautifulSoup</span><br></pre></td></tr></table></figure>
+
+<p>第二步，从查子域获取子域名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">def czy(urls):   #从查子域网站获取子域名</span><br><span class="line">    url = &#x27;https://chaziyu.com/&#x27;+str(urls)</span><br><span class="line">    header = &#123;</span><br><span class="line">        &quot;Cookie&quot;: &quot;BAIDU_SSP_lcr=https://www.baidu.com/link?url=G6Z8y2tur1nTS4StdwzTd-i-z2l7NblTl3YnJh6mfWg7zK6cD7F7ZoVOSH2M3Rx6&amp;wd=&amp;eqid=a690ccbd000144ad0000000663046c7b; Hm_lvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; Hm_lpvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; cz_statistics_visitor=4a4d8650-aa21-09c6-932c-8b7ac1147740; qHistory=aHR0cDovL3dob2lzLmNoaW5hei5jb20vX1dob2lz5p+l6K+ifGh0dHA6Ly90b29sLmNoaW5hei5jb20vc3ViZG9tYWluL1/lrZDln5/lkI3mn6Xor6I=; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234469; toolbox_urls=badui.com; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234446&quot;,</span><br><span class="line">        &quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0&quot;</span><br><span class="line">    &#125;      #输入</span><br><span class="line">    response = requests.get(url=url, headers=header) # 获得get请求</span><br><span class="line">    bf = BeautifulSoup(response.text, &#x27;html.parser&#x27;) # 获得bs4解析对象</span><br><span class="line">    suop = bf.find_all(&#x27;a&#x27;, target=&#x27;_blank&#x27;)   # 通过标签获得想要的内容（为什么这么写，去看看我简单爬虫的那篇文章）</span><br><span class="line">    list1 = []    #创建一个列表</span><br><span class="line">    for i in suop:  #遍历soup，将里面的内容遍历出来</span><br><span class="line">        a = i.string</span><br><span class="line">        list1.append(a) #将遍历内容放入list1</span><br><span class="line">    return list1   # 返回list1的值</span><br></pre></td></tr></table></figure>
+
+<p>第三步，从另一个网站获取子域名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">def zzzj(urls): #从站长之家获取子域名</span><br><span class="line">    url = &quot;https://tool.chinaz.com/subdomain/&quot;+str(urls)</span><br><span class="line">    header = &#123;</span><br><span class="line">        &quot;Cookie&quot;: &quot;BAIDU_SSP_lcr=https://www.baidu.com/link?url=G6Z8y2tur1nTS4StdwzTd-i-z2l7NblTl3YnJh6mfWg7zK6cD7F7ZoVOSH2M3Rx6&amp;wd=&amp;eqid=a690ccbd000144ad0000000663046c7b; Hm_lvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; Hm_lpvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; cz_statistics_visitor=4a4d8650-aa21-09c6-932c-8b7ac1147740; qHistory=aHR0cDovL3dob2lzLmNoaW5hei5jb20vX1dob2lz5p+l6K+ifGh0dHA6Ly90b29sLmNoaW5hei5jb20vc3ViZG9tYWluL1/lrZDln5/lkI3mn6Xor6I=; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234469; toolbox_urls=badui.com; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234446&quot;,</span><br><span class="line">        &quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">    response = requests.get(url=url, headers=header)</span><br><span class="line">    bf = BeautifulSoup(response.text, &#x27;html.parser&#x27;)</span><br><span class="line">    suop = bf.find_all(&#x27;a&#x27;, target=&#x27;_blank&#x27;)</span><br><span class="line">    list2 = []</span><br><span class="line">    for i in suop:</span><br><span class="line">        a = i.string</span><br><span class="line">        list2.append(a)</span><br><span class="line">    return list2</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>我这里用到站长之家，为什么要查两个网站，因为确保准确性，如果两个网站都含有这个子域名，就证明这些子域名大概率是对的了。注意，站长之家如果不登录只能爬取前面五个子域名。</p>
+<p>第四步，获取相同的子域名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def main(urls): #将两个网站同时拥有的域名输出</span><br><span class="line">    czy(urls)   #运行czy函数</span><br><span class="line">    zzzj(urls)</span><br><span class="line">    a = set(czy(urls))  #将列表转化为元祖，因为元祖才可以进行对比操作</span><br><span class="line">    b = set(zzzj(urls))</span><br><span class="line">    c = (a &amp; b)   #找到相同的内容</span><br><span class="line">    for i in c:</span><br><span class="line">        print(i)</span><br><span class="line"></span><br><span class="line">if __name__==&#x27;__main__&#x27;:</span><br><span class="line">    urls = input(&quot;请输入你查询的网站&quot;)</span><br><span class="line">    main(urls)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">import requests</span><br><span class="line">from bs4 import BeautifulSoup</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def czy(urls):   #从查子域网站获取子域名</span><br><span class="line">    url = &#x27;https://chaziyu.com/&#x27;+str(urls)</span><br><span class="line">    header = &#123;</span><br><span class="line">        &quot;Cookie&quot;: &quot;BAIDU_SSP_lcr=https://www.baidu.com/link?url=G6Z8y2tur1nTS4StdwzTd-i-z2l7NblTl3YnJh6mfWg7zK6cD7F7ZoVOSH2M3Rx6&amp;wd=&amp;eqid=a690ccbd000144ad0000000663046c7b; Hm_lvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; Hm_lpvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; cz_statistics_visitor=4a4d8650-aa21-09c6-932c-8b7ac1147740; qHistory=aHR0cDovL3dob2lzLmNoaW5hei5jb20vX1dob2lz5p+l6K+ifGh0dHA6Ly90b29sLmNoaW5hei5jb20vc3ViZG9tYWluL1/lrZDln5/lkI3mn6Xor6I=; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234469; toolbox_urls=badui.com; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234446&quot;,</span><br><span class="line">        &quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">    response = requests.get(url=url, headers=header)</span><br><span class="line">    bf = BeautifulSoup(response.text, &#x27;html.parser&#x27;)</span><br><span class="line">    suop = bf.find_all(&#x27;a&#x27;, target=&#x27;_blank&#x27;)</span><br><span class="line">    list1 = []</span><br><span class="line">    for i in suop:</span><br><span class="line">        a = i.string</span><br><span class="line">        list1.append(a)</span><br><span class="line">    return list1</span><br><span class="line"></span><br><span class="line">def zzzj(urls): #从站长之家获取子域名</span><br><span class="line">    url = &quot;https://tool.chinaz.com/subdomain/&quot;+str(urls)</span><br><span class="line">    header = &#123;</span><br><span class="line">        &quot;Cookie&quot;: &quot;BAIDU_SSP_lcr=https://www.baidu.com/link?url=G6Z8y2tur1nTS4StdwzTd-i-z2l7NblTl3YnJh6mfWg7zK6cD7F7ZoVOSH2M3Rx6&amp;wd=&amp;eqid=a690ccbd000144ad0000000663046c7b; Hm_lvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; Hm_lpvt_aecc9715b0f5d5f7f34fba48a3c511d6=1661234319; cz_statistics_visitor=4a4d8650-aa21-09c6-932c-8b7ac1147740; qHistory=aHR0cDovL3dob2lzLmNoaW5hei5jb20vX1dob2lz5p+l6K+ifGh0dHA6Ly90b29sLmNoaW5hei5jb20vc3ViZG9tYWluL1/lrZDln5/lkI3mn6Xor6I=; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234469; toolbox_urls=badui.com; Hm_lvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234431; Hm_lpvt_ca96c3507ee04e182fb6d097cb2a1a4c=1661234446&quot;,</span><br><span class="line">        &quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">    response = requests.get(url=url, headers=header)</span><br><span class="line">    bf = BeautifulSoup(response.text, &#x27;html.parser&#x27;)</span><br><span class="line">    suop = bf.find_all(&#x27;a&#x27;, target=&#x27;_blank&#x27;)</span><br><span class="line">    list2 = []</span><br><span class="line">    for i in suop:</span><br><span class="line">        a = i.string</span><br><span class="line">        list2.append(a)</span><br><span class="line">    return list2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def main(urls): #将两个网站同时拥有的域名输出</span><br><span class="line">    czy(urls)</span><br><span class="line">    zzzj(urls)</span><br><span class="line">    a = set(czy(urls))</span><br><span class="line">    b = set(zzzj(urls))</span><br><span class="line">    c = (a &amp; b)</span><br><span class="line">    for i in c:</span><br><span class="line">        print(i)</span><br><span class="line"></span><br><span class="line">if __name__==&#x27;__main__&#x27;:</span><br><span class="line">    urls = input(&quot;请输入你查询的网站&quot;)</span><br><span class="line">    main(urls)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="运行实例"><a href="#运行实例" class="headerlink" title="运行实例"></a>运行实例</h1><p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/dsdadisdafasfafs.png"></p>
+<p>成功获得子域名，但是站长之家不登录只返回5条，所以这里只有5条记录</p>
+<p>——————————————————————————————————————————————————</p>
+<p>requests库借鉴文章:[(24条消息) Python Requests库安装和使用_睿科知识云的博客-CSDN博客_python request库安装](<a target="_blank" rel="noopener" href="https://blog.csdn.net/ccc369639963/article/details/123421449#:~:text=Python">https://blog.csdn.net/ccc369639963/article/details/123421449#:~:text=Python</a> requests Requests 是 Python 的第三方库，它的安装非常简便，如下所示： python -m,urllib 的基础上开发而来，它使用 Python 语言编写，并且采用了 Apache2 Licensed（一种开源协议）的 HTTP 库。)</p>
+<p>bs4借鉴文章：<a target="_blank" rel="noopener" href="http://c.biancheng.net/python_spider/bs4.html">http://c.biancheng.net/python_spider/bs4.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/05/Linux%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/05/Linux%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">Liunx基础</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-05 10:52:55 / 修改时间：13:01:22" itemprop="dateCreated datePublished" datetime="2022-09-05T10:52:55+08:00">2022-09-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">Linux基础</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>这是我看鸟哥的linux私房菜，总结出的知识点，不全面，但都是一些比较常用的命令，和工具的用法</p>
+<p>鸟哥的私房菜网址：<a target="_blank" rel="noopener" href="https://www.runoob.com/linux/linux-tutorial.html">Linux 教程 | 菜鸟教程 (runoob.com)</a></p>
+<h1 id="Linux的文件权限与目录配置"><a href="#Linux的文件权限与目录配置" class="headerlink" title="Linux的文件权限与目录配置"></a>Linux的文件权限与目录配置</h1><ol>
+<li><h2 id="查看所有文件和其权限"><a href="#查看所有文件和其权限" class="headerlink" title="查看所有文件和其权限"></a>查看所有文件和其权限</h2></li>
+</ol>
+<p>​        ls -al</p>
+<ol start="2">
+<li><h2 id="修改文件权限"><a href="#修改文件权限" class="headerlink" title="修改文件权限"></a>修改文件权限</h2>chown 修改文件所有者</li>
+</ol>
+<p>​       chgrp   修改文件所属用户组</p>
+<p>​       chmod 修改文件的权限</p>
+<ol start="3">
+<li><h2 id="文件种类与扩展名"><a href="#文件种类与扩展名" class="headerlink" title="文件种类与扩展名"></a>文件种类与扩展名</h2></li>
+</ol>
+<p>​        一般文件（-）</p>
+<p>​        目录文件（d）</p>
+<p>​        链接文件（l）</p>
+<p>​        设备与设备文件（b&#x2F;c)     一般保存在&#x2F;dev 目录下</p>
+<p>​        数据接口文件（s）</p>
+<p>​        数据传输文件 （p）</p>
+<ol start="4">
+<li><h2 id="三层目录"><a href="#三层目录" class="headerlink" title="三层目录"></a>三层目录</h2></li>
+</ol>
+<p>​      &#x2F;      root根目录 与启动系统有关</p>
+<p>​       &#x2F;usr  与软件安装执行有关</p>
+<p>​      &#x2F;var 与系统运行过程有关</p>
+<h3 id="一-x2F-root目录下"><a href="#一-x2F-root目录下" class="headerlink" title="一.      &#x2F;     root目录下"></a>一.      &#x2F;     root目录下</h3><p>​       &#x2F;bin  存放有很多执行文件的目录</p>
+<p>​      &#x2F;boot  主要放置启动时使用的命令</p>
+<p>​      &#x2F;dev   存放设备和设备接口的文件</p>
+<p>​      &#x2F;etc    系统的主要配置文件几乎都放置在这个区域      &#x2F;etc&#x2F;passwd </p>
+<p>​      &#x2F;lib     放置启动时用到的函数库以及&#x2F;bin&#x2F;sbin下面会调用的函数库</p>
+<p>​      &#x2F;run  放置系统启动时放置的各类信息</p>
+<p>​      &#x2F;home  创建新的用户时，会创建一个家目录</p>
+<p>​      &#x2F;root 系统管理员的家目录</p>
+<p>​      &#x2F;usr</p>
+<p>​      &#x2F;var</p>
+<h3 id="二-x2F-usr-目录下"><a href="#二-x2F-usr-目录下" class="headerlink" title="二.&#x2F;usr  目录下"></a>二.&#x2F;usr  目录下</h3><p>​     &#x2F;usr&#x2F;local&#x2F; 放置系统管理员本机下安装的软件</p>
+<p>​     &#x2F;usr&#x2F;src&#x2F;   一般的源代码建议放到这里</p>
+<h3 id="三-x2F-var-目录下"><a href="#三-x2F-var-目录下" class="headerlink" title="三. &#x2F;var  目录下"></a>三. &#x2F;var  目录下</h3><p>​     &#x2F;var&#x2F;cache&#x2F; 应用程序本身会产生的一些缓存</p>
+<p>​    &#x2F;var&#x2F;lock&#x2F;  上锁设备</p>
+<p>​    &#x2F;var&#x2F;log&#x2F; 放置的日志文件  &#x2F;var&#x2F;log&#x2F;messages    &#x2F;var&#x2F;log&#x2F;wtmp  记录登录信息</p>
+<p>\5.  ..&#x2F;   返回上层目录</p>
+<p>​       .&#x2F;   表示当前目录</p>
+<h1 id="Linux文件与目录管理"><a href="#Linux文件与目录管理" class="headerlink" title="Linux文件与目录管理"></a>Linux文件与目录管理</h1><ol>
+<li><h2 id="常见处理目录的命令"><a href="#常见处理目录的命令" class="headerlink" title="常见处理目录的命令"></a>常见处理目录的命令</h2></li>
+</ol>
+<p>​       cd  切换目录</p>
+<p>​       pwd  显示当前目录</p>
+<p>​       mkdir  创建一个新目录     mkdir  -p 直接依序创建目录    mkdir -m   711  设置默认权限</p>
+<p>​       redir   删除一个新目录</p>
+<ol start="2">
+<li><h2 id="关于环境变量-PATH"><a href="#关于环境变量-PATH" class="headerlink" title="关于环境变量$PATH"></a>关于环境变量$PATH</h2></li>
+</ol>
+<p>​       echo  $PATH  查看当前PATH</p>
+<ol start="3">
+<li><h2 id="文件和目录查看"><a href="#文件和目录查看" class="headerlink" title="文件和目录查看"></a>文件和目录查看</h2></li>
+</ol>
+<p>​       ls</p>
+<p>​       ls -a 全部文件，包括隐藏文件</p>
+<p>​       ls -d 仅列出目录本身</p>
+<p>​       ls -l  显示详细信息</p>
+<p>​       ls –full-time 列出完整的时间</p>
+<ol start="4">
+<li><h2 id="复制，移动，删除"><a href="#复制，移动，删除" class="headerlink" title="复制，移动，删除"></a>复制，移动，删除</h2></li>
+</ol>
+<p>​      cp 复制  cp -a(复制所有) -f（强制）-p（文件属性一起复制过去）-r（递归复制） 源文件 .(复制到当前目录)           目标文件  </p>
+<p>​     mv 移动（剪切）mv -f(强制)  </p>
+<p>​     rm 删除    rm -f（忽略不存在的文件） -r（递归删除）-i（删除前询问是否删除）</p>
+<ol start="5">
+<li><h2 id="查看文件内容"><a href="#查看文件内容" class="headerlink" title="查看文件内容"></a>查看文件内容</h2></li>
+</ol>
+<p>​       cat 从第一行显示内容</p>
+<p>​       tac 从最后一行显示内容</p>
+<p>​       nl 显示时输出行号</p>
+<p>​       more 一页一页的显示</p>
+<p>​       less 与more类似，但可以 往前翻页   &#x2F;向下查找字符串  ?向上查找字符串</p>
+<p>​       head -n   显示几行</p>
+<p>​       tail -n显示后面几行</p>
+<ol start="6">
+<li><h2 id="od-非纯文本文件"><a href="#od-非纯文本文件" class="headerlink" title="od 非纯文本文件"></a>od 非纯文本文件</h2></li>
+</ol>
+<p>​       od -t c  源文件</p>
+<ol start="7">
+<li><h2 id="修改文件时间或创建新文件-touch"><a href="#修改文件时间或创建新文件-touch" class="headerlink" title="修改文件时间或创建新文件 touch"></a>修改文件时间或创建新文件 touch</h2></li>
+</ol>
+<p>​       touch -a 近定义自定义时间 access time（读取时间）</p>
+<p>​       touch -c 仅修改文件时间，若文件不存在则创建</p>
+<p>​       touch -m 仅修改mtime</p>
+<p>​       touch -d  “2 days ago” 目标文件  后 面接自定义的时间</p>
+<ol start="8">
+<li><h2 id="文件默认权限"><a href="#文件默认权限" class="headerlink" title="文件默认权限"></a>文件默认权限</h2><p>umask</p>
+</li>
+<li><h2 id="文件隐藏属性"><a href="#文件隐藏属性" class="headerlink" title="文件隐藏属性"></a>文件隐藏属性</h2></li>
+</ol>
+<p>​       配置文件隐藏属性 chattr</p>
+<p>​       -a  文件只能增加数据，不能删除或修   </p>
+<p>​       -i  不能增删改查</p>
+<p>​       显示文件隐藏属性  lsattr</p>
+<ol start="10">
+<li><h2 id="观察文件类型"><a href="#观察文件类型" class="headerlink" title="观察文件类型"></a>观察文件类型</h2></li>
+</ol>
+<p>​       file</p>
+<ol start="11">
+<li><h2 id="查找执行文件-which"><a href="#查找执行文件-which" class="headerlink" title="查找执行文件 which"></a>查找执行文件 which</h2></li>
+</ol>
+<p>​       -a 将path的目录全部列出</p>
+<ol start="12">
+<li><h2 id="查找文件"><a href="#查找文件" class="headerlink" title="查找文件"></a>查找文件</h2></li>
+</ol>
+<p>​       whereis</p>
+<p>​       locate -i（忽略大小写）</p>
+<p>​       find    </p>
+<h1 id="Linux磁盘与文件系统管理"><a href="#Linux磁盘与文件系统管理" class="headerlink" title="Linux磁盘与文件系统管理"></a>Linux磁盘与文件系统管理</h1><ol>
+<li><h2 id="所有物理磁盘的文件名都被模拟成-x2F-dev-x2F-sd【a-p】的格式"><a href="#所有物理磁盘的文件名都被模拟成-x2F-dev-x2F-sd【a-p】的格式" class="headerlink" title="所有物理磁盘的文件名都被模拟成&#x2F;dev&#x2F;sd【a-p】的格式"></a>所有物理磁盘的文件名都被模拟成&#x2F;dev&#x2F;sd【a-p】的格式</h2></li>
+</ol>
+<p>​      &#x2F;dev&#x2F;sd【a-p】【1-128】物理磁盘的文件名</p>
+<p>​      &#x2F;dev&#x2F;vd【a-d】【1-128】虚拟磁盘的文件名</p>
+<ol start="2">
+<li><h2 id="文件系统特性"><a href="#文件系统特性" class="headerlink" title="文件系统特性"></a>文件系统特性</h2></li>
+</ol>
+<p>​      1.超级区块 记录此文件的整体信息</p>
+<p>​      2. inode     记录文件的属性，一个文件占一个inode00</p>
+<p>​      3.数据区块 记录文件内容</p>
+<p>​      <strong>inode 记录的数据至少以下几种</strong></p>
+<p>​      文件的读写属性（read，write，excute）</p>
+<p>​      文件的拥有者与用户组（owner，group）</p>
+<p>​      文件的大小</p>
+<p>​      文件的建立或状态改变的时间（ctime）</p>
+<p>​      最近一次读取的时间（atime）</p>
+<p>​      最近修改的时间（atime）</p>
+<p>​      <strong>超级区块记录的数据主要有</strong></p>
+<p>​      数据区块与inode的总量       </p>
+<p>​      未使用和已经使用的inode的数据区块总量</p>
+<p>​      数据区块与inode的大小（block为1k，2k，3k，inode为128b或者256b）</p>
+<p>​      文件的挂载时间，最近一次写入数据的时间</p>
+<p>​      <strong>dumpe2fs 查询ext系列超级区块的信息的命令</strong></p>
+<ol start="3">
+<li><h2 id="与目录树的关系"><a href="#与目录树的关系" class="headerlink" title="与目录树的关系"></a>与目录树的关系</h2></li>
+</ol>
+<p>​       ls -i  查询inode的号码</p>
+<ol start="4">
+<li><h2 id="文件系统的简单操作"><a href="#文件系统的简单操作" class="headerlink" title="文件系统的简单操作"></a>文件系统的简单操作</h2></li>
+</ol>
+<p>​       df: 列出文件系统的整体磁盘使用量   -h 以人们好阅读的格式显示</p>
+<p>​       du:查看当前目录的所占空间</p>
+<ol start="5">
+<li><h2 id="硬连接与符号连接-ln"><a href="#硬连接与符号连接-ln" class="headerlink" title="硬连接与符号连接 ln"></a>硬连接与符号连接 ln</h2></li>
+</ol>
+<p>​       硬连接 将两个文件inode号码连接到一起 所有相关信息都一样除了文件名</p>
+<p>​       符号连接    相当于快捷方式 如果源文件不在了，链接文件也会打不开</p>
+<p>​       ln 不加参数就是硬连接，-s参数就是符号连接</p>
+<ol start="6">
+<li><h2 id="观察磁盘分区状态"><a href="#观察磁盘分区状态" class="headerlink" title="观察磁盘分区状态"></a>观察磁盘分区状态</h2></li>
+</ol>
+<p>​       lsblk </p>
+<h1 id="Linux文件与文件系统压缩"><a href="#Linux文件与文件系统压缩" class="headerlink" title="Linux文件与文件系统压缩"></a>Linux文件与文件系统压缩</h1><ol>
+<li><h2 id="常见的压缩文件扩展名"><a href="#常见的压缩文件扩展名" class="headerlink" title="常见的压缩文件扩展名"></a>常见的压缩文件扩展名</h2></li>
+</ol>
+<p>​       .z compress程序压缩文件</p>
+<p>​       .zip zip程序的压缩文件</p>
+<p>​       .gz   gzip程序的压缩文件</p>
+<p>​       .bz   bzip2程序的压缩文件</p>
+<p>​       .xz   xz程序的压缩文件</p>
+<p>​       .tar tar程序打包文件，没有被压缩   .tat.gz     .tar.bz2  .tar.xz</p>
+<ol start="2">
+<li><h2 id="gzip"><a href="#gzip" class="headerlink" title="gzip"></a>gzip</h2></li>
+</ol>
+<p>​       gzip 应用最广的压缩命令</p>
+<p>​       gzip -v显示压缩比例 -d解压缩  文件名</p>
+<p>​       zcat  将gzip文件读出来</p>
+<ol start="3">
+<li><h2 id="bzip2"><a href="#bzip2" class="headerlink" title="bzip2"></a>bzip2</h2></li>
+</ol>
+<p>​       和gzip用法一样 -v -d</p>
+<ol start="4">
+<li><h2 id="xz"><a href="#xz" class="headerlink" title="xz"></a>xz</h2></li>
+</ol>
+<p>​      用法也一样</p>
+<ol start="5">
+<li><h2 id="打包命令-tar"><a href="#打包命令-tar" class="headerlink" title="打包命令 tar"></a>打包命令 tar</h2></li>
+</ol>
+<p>​      -j  通过bzip2的支持进行压缩   -c 建立打包文件，可搭配-v来查看被打包的文件名</p>
+<p>​      -t  查看打包文件有哪些文件名 -x解包或解压缩功能   -f  filename后面接要被处理的文件名</p>
+<p>​      -p 保存原本文件的权限与属性</p>
+<p>​      压缩 tar-jcv -f 文件名.tar.bz2</p>
+<p>​      查询  tar-jtv -f  文件名.tar.bz2</p>
+<p>​      解压缩 tar-jxv -f 文件名.tar.bzc   -C 预压缩的目录</p>
+<h1 id="VIM程序编辑器"><a href="#VIM程序编辑器" class="headerlink" title="VIM程序编辑器"></a>VIM程序编辑器</h1><ol>
+<li><h2 id="vi有三种模式"><a href="#vi有三种模式" class="headerlink" title="vi有三种模式"></a>vi有三种模式</h2></li>
+</ol>
+<p>​      一般命令模式</p>
+<p>​      编辑模式[输入i]</p>
+<p>​      命令行模式[输入:]</p>
+<ol start="2">
+<li><p>使用vi进入命令行模式</p>
+</li>
+<li><h2 id="一般模式"><a href="#一般模式" class="headerlink" title="一般模式"></a>一般模式</h2></li>
+</ol>
+<p>​      ctrl+f 向下移动一页</p>
+<p>​      ctrl+b 向上移动一页</p>
+<p>​      0  移动到这一行最前面一个字符</p>
+<p>​      $  移动到这一行最后一个字符</p>
+<p>​      G 移动到这个文件的最后一行</p>
+<p>​      nG  n为数字，移动到这个文件第n行</p>
+<p>​      gg 移动到这个文件第一行</p>
+<p>​      &#x2F;word 在光标之下寻找第一个名称为word的字符串</p>
+<p>​      ?word 在关标之上寻找第一个名称为word的字符串</p>
+<p>​      ： n1，n2s&#x2F;word1&#x2F;word2&#x2F;g  n1,n2为数字，在第n1和n2行间寻找word1，然后替换为word2</p>
+<p>​      x与X x删除后面一个字符 X删除光标前面一个字符</p>
+<p>​      nx n为数字</p>
+<p>​      dd 剪切光标所在哪一行 ndd 剪切那n行</p>
+<p>​      yy 复制光标所在哪一行 nyy</p>
+<p>​      p和P p将已复制的数据在光标下面一行粘贴 P 上一行粘贴</p>
+<p>​      u 恢复上一个操作</p>
+<p>​      .  重做上一个操作</p>
+<p>​      r和R 进入替换模式 r只会替换光标所在的那一个字符一次 R会一直替换光标所在的文字</p>
+<p>​      :set  nu 显示行号 </p>
+<p>​      ：！command 暂时退出vi到命令行执行command的显示结果</p>
+<p>​      v 字符选择  V 行选择  ctrl+v 用矩阵的方式选择  y 将选择的地方复制  d 删除</p>
+<ol start="4">
+<li><h2 id="多窗口模式"><a href="#多窗口模式" class="headerlink" title="多窗口模式"></a>多窗口模式</h2></li>
+</ol>
+<p>​      ：sp{filename}   不加filename就是在当前文件两个窗口</p>
+<p>​      ctrl+w+j  进入下面一个窗口</p>
+<p>​      ctrl+w+k 进入上面一个窗口</p>
+<ol start="5">
+<li><h2 id="整体的vim设置放在-x2F-etc-x2F-vimrc里面"><a href="#整体的vim设置放在-x2F-etc-x2F-vimrc里面" class="headerlink" title="整体的vim设置放在&#x2F;etc&#x2F;vimrc里面"></a>整体的vim设置放在&#x2F;etc&#x2F;vimrc里面</h2></li>
+</ol>
+<h1 id="认识和学习bash"><a href="#认识和学习bash" class="headerlink" title="认识和学习bash"></a>认识和学习bash</h1><ol>
+<li><h2 id="Bash-shell"><a href="#Bash-shell" class="headerlink" title="Bash shell"></a>Bash shell</h2></li>
+</ol>
+<p>​      history 历史命名  !n 执行第n条命名   !! 执行上一条命名</p>
+<p>​      Tab键 补全键</p>
+<p>​      alias 命令别名设置功能 lm&#x3D;”ls-al”</p>
+<ol start="2">
+<li><h2 id="变量的使用与设置"><a href="#变量的使用与设置" class="headerlink" title="变量的使用与设置"></a>变量的使用与设置</h2></li>
+</ol>
+<p>​      echo 变量的使用与设置 </p>
+<p>​      unset 取消变量</p>
+<ol start="3">
+<li><h2 id="环境变量功能"><a href="#环境变量功能" class="headerlink" title="环境变量功能"></a>环境变量功能</h2></li>
+</ol>
+<p>​      env 查看当前环境变量及内容</p>
+<p>​      set  查看全部环境变量</p>
+<p>​      export  自定义变量转成环境变量 </p>
+<ol start="4">
+<li><p>ps1:（提升字符设置）</p>
+</li>
+<li><p>locale 显示结果的语系变量  .</p>
+</li>
+<li><p>read 读取来自键盘输入的变量</p>
+</li>
+<li><p>declare 申明变量类型 -a 数组类型 -i 整数类型 -x 环境变量</p>
+</li>
+<li><p>从前面开始删除变量</p>
+</li>
+<li><p>% 从前面开始删除变量</p>
+</li>
+</ol>
+<p>10  &#x2F; 旧字符串&#x2F;新字符串 将第一个变量替换成第二个  &#x2F;&#x2F;匹配到的全部替换</p>
+<ol start="11">
+<li><p>登录画面内容在 &#x2F;etc&#x2F;issue 里面设置</p>
+</li>
+<li><h2 id="login-shell-和-non-login-shell"><a href="#login-shell-和-non-login-shell" class="headerlink" title="login shell 和 non-login shell"></a>login shell 和 non-login shell</h2></li>
+</ol>
+<p>​       login shell 取得bash时需要的完整的登录流程，会读取两个文件 &#x2F;etc&#x2F;peofile 系统的整体设计</p>
+<p>​                                                                                                               ~&#x2F;.bash_profile 用户的个人设置</p>
+<p>​        non-login shell 取得bash的方法不需要重复登录的操作 </p>
+<ol start="13">
+<li><h2 id="终端环境变量设置"><a href="#终端环境变量设置" class="headerlink" title="终端环境变量设置"></a>终端环境变量设置</h2>stty 和set</li>
+</ol>
+<p>​       查看按键内容 stty  </p>
+<p>​       终端变量设置 set </p>
+<ol start="14">
+<li><h2 id="数据留重定向"><a href="#数据留重定向" class="headerlink" title="数据留重定向"></a>数据留重定向</h2></li>
+</ol>
+<p>​       标准输入 代码0  ，使用&lt; 或 &lt;&lt;</p>
+<p>​       标准输出  代码1，使用&gt; 或&gt;&gt;</p>
+<p>​       标准错误输出  代码2， 使用2&gt; 或  2&gt;&gt;</p>
+<ol start="15">
+<li><h2 id="命令执行的判断依据-amp-amp-和"><a href="#命令执行的判断依据-amp-amp-和" class="headerlink" title="命令执行的判断依据 &amp;&amp; 和 ||"></a>命令执行的判断依据 &amp;&amp; 和 ||</h2></li>
+</ol>
+<p>​       cmd1&amp;&amp;cnd2 若cmd1执行错误，则不执行cmd2</p>
+<p>​       cmd1||cmd2   若cmd1执行错误，则执行cmd2</p>
+<ol start="16">
+<li><h2 id="排序命令"><a href="#排序命令" class="headerlink" title="排序命令"></a>排序命令</h2></li>
+</ol>
+<p>​       sort 排序</p>
+<p>​       unqi 排序完成了，将重复的数据只列出一个显示</p>
+<p>​       wc 查看多少文字和字符</p>
+<ol start="17">
+<li><h2 id="字符转换命令"><a href="#字符转换命令" class="headerlink" title="字符转换命令"></a>字符转换命令</h2></li>
+</ol>
+<p>​       tr  删除信息中的一段文字或进行替换</p>
+<p>​       join 两个文件当中，有相同数据的哪一行加起来</p>
+<ol start="18">
+<li><h2 id="划分命令-split"><a href="#划分命令-split" class="headerlink" title="划分命令 split"></a>划分命令 split</h2></li>
+<li><p>$?也是变量，在linux中返回0表示成功</p>
+</li>
+</ol>
+<h1 id="正则表达式与文件格式化处理"><a href="#正则表达式与文件格式化处理" class="headerlink" title="正则表达式与文件格式化处理"></a>正则表达式与文件格式化处理</h1><ol>
+<li><h2 id="grep"><a href="#grep" class="headerlink" title="grep"></a>grep</h2></li>
+</ol>
+<p>​       digit   代表数字 0-9</p>
+<p>​       upper  大写字母   lower 小写字母</p>
+<p>​       grep -i 忽略大小写 -n 输出行号 -v反向选择 </p>
+<ol start="2">
+<li><h2 id="基础正则表达式字符集合（characters）"><a href="#基础正则表达式字符集合（characters）" class="headerlink" title="基础正则表达式字符集合（characters）"></a>基础正则表达式字符集合（characters）</h2></li>
+</ol>
+<p>​       ctrl     [ctrl]    *    .    [-]    $ </p>
+<ol start="3">
+<li><h2 id="sed工具"><a href="#sed工具" class="headerlink" title="sed工具"></a>sed工具</h2></li>
+</ol>
+<p>​       sed [-nefr] [操作]</p>
+<p>​       -n 使用安静模式 -e直接在命名行模式进行sed操作 -i 直接修改读取文件内容</p>
+<p>​       操作说明 n1 n2 function ，n1 n2表示行数   $代表最后一行</p>
+<p>​       a 新增 c 替换 d 删除 i 插入 p 打印 s 替换</p>
+<ol start="4">
+<li><h2 id="格式化打印"><a href="#格式化打印" class="headerlink" title="格式化打印"></a>格式化打印</h2></li>
+</ol>
+<p>​       printf </p>
+<ol start="5">
+<li><h2 id="awk-数据处理工具"><a href="#awk-数据处理工具" class="headerlink" title="awk 数据处理工具"></a>awk 数据处理工具</h2></li>
+</ol>
+<p>​      NF 每一行字段总数 </p>
+<p>​      NR 目前awk所处理的第几行数据</p>
+<p>​      FS 分隔字符。默认是空格键</p>
+<h1 id="学习shell脚本"><a href="#学习shell脚本" class="headerlink" title="学习shell脚本"></a>学习shell脚本</h1><ol>
+<li><h2 id="编写脚本"><a href="#编写脚本" class="headerlink" title="编写脚本"></a>编写脚本</h2></li>
+</ol>
+<p>​      第一行声明shell名称</p>
+<p>​      !&#x2F;bin&#x2F;bash</p>
+<p>​      简单的shell脚本 </p>
+<p>​      计算式    $((计算式))</p>
+<p>​      sh 执行脚本并不会在父进程生效</p>
+<p>​      source 执行脚本会在父进程生效</p>
+<ol start="2">
+<li><h2 id="用test命令的测试功能"><a href="#用test命令的测试功能" class="headerlink" title="用test命令的测试功能"></a>用test命令的测试功能</h2></li>
+</ol>
+<p>​      test -e 测试文件是否存在 -f 该文件名是否存在且文件 -d 该文件名是否存在且为目录</p>
+<ol start="3">
+<li><h2 id="if-then-判断"><a href="#if-then-判断" class="headerlink" title="if  .then 判断"></a>if  .then 判断</h2></li>
+</ol>
+<p>​      &amp;&amp;表示and</p>
+<p>​      || 表示or</p>
+<p>​      if 条件判断 ；then</p>
+<p>​      elif</p>
+<p>​      else</p>
+<p>​      fi（结束之意）</p>
+<ol start="4">
+<li><h2 id="case-esac判断"><a href="#case-esac判断" class="headerlink" title="case esac判断"></a>case esac判断</h2></li>
+</ol>
+<p>​     case $变量名称  in </p>
+<p>​     “第一个变量内容”) （关键字为右圆括号）</p>
+<p>​     程序段   </p>
+<p>​     ；；(结尾用两个连续的分号处理)</p>
+<p>​     “第二个变量内容”) （</p>
+<p>​      程序段   </p>
+<p>​      ；；</p>
+<p>​      * ）（最后一个变量的值会用*表示其他所有值）</p>
+<p>​     exit1</p>
+<p>​     ;;  </p>
+<p>​     esac 最终以esac结尾</p>
+<ol start="5">
+<li><h2 id="定义函数"><a href="#定义函数" class="headerlink" title="定义函数"></a>定义函数</h2></li>
+</ol>
+<p>​      function fname（）{</p>
+<p>​      程序段</p>
+<p>​      }</p>
+<ol start="6">
+<li><h2 id="loop-循环"><a href="#loop-循环" class="headerlink" title="loop 循环"></a>loop 循环</h2></li>
+</ol>
+<p>​       while do done 和 until do done</p>
+<p>​       while [判断式]  判断成功则开始循环      until [判断式]  当判断成立就终止循环</p>
+<p>​       do 循环开始                                              do 循环开始</p>
+<p>​       程序段落                                                    程序段落</p>
+<p>​       done 循环结束                                          done 循环结束</p>
+<ol start="7">
+<li><h2 id="固定循环-for-do-done"><a href="#固定循环-for-do-done" class="headerlink" title="固定循环  for do done"></a>固定循环  for do done</h2></li>
+</ol>
+<p>​        for var  in  con1 con2 con3</p>
+<p>​        do   </p>
+<p>​        程序段</p>
+<p>​        done </p>
+<p>​        第一次循环 $var 的值为con1</p>
+<p>​        …..</p>
+<h1 id="linux账号管理与ACL权限设置"><a href="#linux账号管理与ACL权限设置" class="headerlink" title="linux账号管理与ACL权限设置"></a>linux账号管理与ACL权限设置</h1><ol>
+<li><h2 id="用户标识符uid与gid"><a href="#用户标识符uid与gid" class="headerlink" title="用户标识符uid与gid"></a>用户标识符uid与gid</h2></li>
+</ol>
+<p>​        id与账号对应在&#x2F;etc&#x2F;passwd里面</p>
+<p>​        uid 用户id  gid 用户组id</p>
+<p>​        用户登录后，获取shell 在&#x2F;sbin&#x2F;nologin</p>
+<ol start="2">
+<li><p>&#x2F;etc&#x2F;shadow 一共有9个字段</p>
+</li>
+<li><p>&#x2F;etc&#x2F;group 与 &#x2F;etc&#x2F;gshadow</p>
+</li>
+<li><p>有效用户组与初始用户组</p>
+</li>
+</ol>
+<p>​        newgrp ：有效用户组切换</p>
+<ol start="5">
+<li><h2 id="账号管理"><a href="#账号管理" class="headerlink" title="账号管理"></a>账号管理</h2></li>
+</ol>
+<p>​        useradd 新增用户 （默认建立家目录后，权限为700）</p>
+<p>​        -g 初始用户组 -u 设置初始uid   -r 建立系统账号（uid会有限制，系统账号不会默认建立家目录）</p>
+<p>​        userdel 删除用户</p>
+<p>​        -r 连同家目录一起删除</p>
+<p>​         passwd 修改密码</p>
+<ol start="6">
+<li><h2 id="组管理"><a href="#组管理" class="headerlink" title="组管理"></a>组管理</h2>groupadd 新增用户组</li>
+</ol>
+<p>​       groupdel  删除用户组</p>
+<p>​       gpasswd  用户组管理员功能</p>
+<p>​       -A 设置用户组管理员</p>
+<ol start="7">
+<li><h2 id="主机详细权限规划-ACL的使用"><a href="#主机详细权限规划-ACL的使用" class="headerlink" title="主机详细权限规划  ACL的使用"></a>主机详细权限规划  ACL的使用</h2></li>
+</ol>
+<p>​       getfcal 获取某个文件或目录的acl设置选项</p>
+<p>​       setfacl 设置某个文件或目录acl规范</p>
+<p>​       设置规范 u:[使用者账号列表]:rwx </p>
+<ol start="8">
+<li><h2 id="用户身份切换"><a href="#用户身份切换" class="headerlink" title="用户身份切换"></a>用户身份切换</h2></li>
+</ol>
+<p>​        su 身份切换命令  执行一次命令 su - -c 命令串</p>
+<p>​        sudo 身份切换命令 （必须在&#x2F;etc&#x2F;sudoers内的用户才能执行sudo命令）</p>
+<ol start="9">
+<li><h2 id="特殊shell"><a href="#特殊shell" class="headerlink" title="特殊shell"></a>特殊shell</h2></li>
+</ol>
+<p>​       &#x2F;sbin&#x2F;nologin</p>
+<p>  10 .PAM 用户验证模块，判断密码是否在字典里面</p>
+<h1 id="计划任务"><a href="#计划任务" class="headerlink" title="计划任务"></a>计划任务</h1><ol>
+<li><h2 id="at"><a href="#at" class="headerlink" title="at"></a>at</h2></li>
+</ol>
+<p>​       执行一次命令    写入&#x2F;var&#x2F;spool&#x2F;at目录中</p>
+<p>​       at +time +命令</p>
+<p>​       atq 查询at命令   attm 删除at命令</p>
+<ol start="2">
+<li><h2 id="crontab"><a href="#crontab" class="headerlink" title="crontab"></a>crontab</h2></li>
+</ol>
+<p>​       循环执行命令</p>
+<p>​       -e 编辑crontab的内容 -l 查看 -r 删除</p>
+<h1 id="进程管理与SELinux初探"><a href="#进程管理与SELinux初探" class="headerlink" title="进程管理与SELinux初探"></a>进程管理与SELinux初探</h1><ol>
+<li><p>在执行命令的后面加上 &amp; 就会在后台中进行</p>
+</li>
+<li><p>将目前任务丢到后台中暂停【ctrl+z】</p>
+</li>
+<li><p>查看后台状态任务 jobs</p>
+</li>
+<li><p>将后台任务拿到前台来处理 fg</p>
+</li>
+<li><p>让任务在后台丢到状态变成运行中 bg</p>
+</li>
+<li><p>删除任务 kill</p>
+</li>
+<li><p>查看进程 ps  -l 只查看与自己相关的进程</p>
+</li>
+<li><p>top 查看进程的动态变化</p>
+</li>
+<li><p>信号 1 启动终止的进程 2 相当于输入ctrl+z中断一个进程</p>
+</li>
+</ol>
+<p>​       9 强制中断进程  15 正常的中断一个进程   19 相当于crrl+c 暂停一个进程</p>
+<ol start="10">
+<li>查看内存使用情况 free</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/04/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E2%80%94%E5%BA%94%E7%94%A8%E5%B1%82/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1543,7 +2203,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
