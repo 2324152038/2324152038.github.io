@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Go 设置 cookieGo 语言中通过 net&#x2F;http 包中的 SetCookie 来设置： 1http.SetCookie(w ResponseWriter, cookie *Cookie)  w 表示需要写入的 response，cookie 是一个 struct，让我们来看一下 cookie 对象是怎么样的 1234567891011121314151617type Cooki">
+<meta property="og:type" content="article">
+<meta property="og:title" content="12.go使用session和cookie">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/20/12-go%E4%BD%BF%E7%94%A8session%E5%92%8Ccookie/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="Go 设置 cookieGo 语言中通过 net&#x2F;http 包中的 SetCookie 来设置： 1http.SetCookie(w ResponseWriter, cookie *Cookie)  w 表示需要写入的 response，cookie 是一个 struct，让我们来看一下 cookie 对象是怎么样的 1234567891011121314151617type Cooki">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-20T04:21:39.000Z">
+<meta property="article:modified_time" content="2022-09-20T04:49:22.310Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/20/12-go%E4%BD%BF%E7%94%A8session%E5%92%8Ccookie/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>12.go使用session和cookie | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/20/12-go%E4%BD%BF%E7%94%A8session%E5%92%8Ccookie/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          12.go使用session和cookie
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-20 12:21:39 / 修改时间：12:49:22" itemprop="dateCreated datePublished" datetime="2022-09-20T12:21:39+08:00">2022-09-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Go-设置-cookie"><a href="#Go-设置-cookie" class="headerlink" title="Go 设置 cookie"></a>Go 设置 cookie</h1><p>Go 语言中通过 net&#x2F;http 包中的 SetCookie 来设置：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http.SetCookie(w ResponseWriter, cookie *Cookie)</span><br></pre></td></tr></table></figure>
+
+<p>w 表示需要写入的 response，cookie 是一个 struct，让我们来看一下 cookie 对象是怎么样的</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Cookie <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name       <span class="type">string</span></span><br><span class="line">    Value      <span class="type">string</span></span><br><span class="line">    Path       <span class="type">string</span></span><br><span class="line">    Domain     <span class="type">string</span></span><br><span class="line">    Expires    time.Time</span><br><span class="line">    RawExpires <span class="type">string</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// MaxAge=0 means no &#x27;Max-Age&#x27; attribute specified.</span></span><br><span class="line"><span class="comment">// MaxAge&lt;0 means delete cookie now, equivalently &#x27;Max-Age: 0&#x27;</span></span><br><span class="line"><span class="comment">// MaxAge&gt;0 means Max-Age attribute present and given in seconds</span></span><br><span class="line">    MaxAge   <span class="type">int</span></span><br><span class="line">    Secure   <span class="type">bool</span></span><br><span class="line">    HttpOnly <span class="type">bool</span></span><br><span class="line">    Raw      <span class="type">string</span></span><br><span class="line">    Unparsed []<span class="type">string</span> <span class="comment">// Raw text of unparsed attribute-value pairs</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们来看一个例子，如何设置 cookie</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">expiration := time.Now()</span><br><span class="line">expiration = expiration.AddDate(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">cookie := http.Cookie&#123;Name: <span class="string">&quot;username&quot;</span>, Value: <span class="string">&quot;astaxie&quot;</span>, Expires: expiration&#125;</span><br><span class="line">http.SetCookie(w, &amp;cookie)</span><br></pre></td></tr></table></figure>
+
+<h1 id="Go-读取-cookie"><a href="#Go-读取-cookie" class="headerlink" title="Go 读取 cookie"></a>Go 读取 cookie</h1><p>上面的例子演示了如何设置 cookie 数据，我们这里来演示一下如何读取 cookie</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cookie, _ := r.Cookie(<span class="string">&quot;username&quot;</span>)</span><br><span class="line">fmt.Fprint(w, cookie)</span><br></pre></td></tr></table></figure>
+
+<p>还有另外一种读取方式</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> _, cookie := <span class="keyword">range</span> r.Cookies() &#123;</span><br><span class="line">    fmt.Fprint(w, cookie.Name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Go-如何使用-session"><a href="#Go-如何使用-session" class="headerlink" title="Go 如何使用 session"></a>Go 如何使用 session</h1><h2 id="session-创建过程"><a href="#session-创建过程" class="headerlink" title="session 创建过程"></a>session 创建过程</h2><p>session 的基本原理是由服务器为每个会话维护一份信息数据，客户端和服务端依靠一个全局唯一的标识来访问这份数据，以达到交互的目的。当用户访问 Web 应用时，服务端程序会随需要创建 session，这个过程可以概括为三个步骤：</p>
+<p>生成全局唯一标识符（sessionid）；<br>开辟数据存储空间。一般会在内存中创建相应的数据结构，但这种情况下，系统一旦掉电，所有的会话数据就会丢失，如果是电子商务类网站，这将造成严重的后果。所以为了解决这类问题，你可以将会话数据写到文件里或存储在数据库中，当然这样会增加 I&#x2F;O 开销，但是它可以实现某种程度的 session 持久化，也更有利于 session 的共享；<br>将 session 的全局唯一标示符发送给客户端。<br>以上三个步骤中，最关键的是如何发送这个 session 的唯一标识这一步上。考虑到 HTTP 协议的定义，数据无非可以放到请求行、头域或 Body 里，所以一般来说会有两种常用的方式：cookie 和 URL 重写。</p>
+<p>1.Cookie</p>
+<p>服务端通过设置 Set-cookie 头就可以将 session 的标识符传送到客户端，而客户端此后的每一次请求都会带上这个标识符，另外一般包含 session 信息的 cookie 会将失效时间设置为 0 (会话 cookie)，即浏览器进程有效时间。至于浏览器怎么处理这个 0，每个浏览器都有自己的方案，但差别都不会太大 (一般体现在新建浏览器窗口的时候)；</p>
+<p>2.URL 重写<br>所谓 URL 重写，就是在返回给用户的页面里的所有的 URL 后面追加 session 标识符，这样用户在收到响应之后，无论点击响应页面里的哪个链接或提交表单，都会自动带上 session 标识符，从而就实现了会话的保持。虽然这种做法比较麻烦，但是，如果客户端禁用了 cookie 的话，此种方案将会是首选。</p>
+<h2 id="Go-实现-session-管理"><a href="#Go-实现-session-管理" class="headerlink" title="Go 实现 session 管理"></a>Go 实现 session 管理</h2><p>通过上面 session 创建过程的讲解，读者应该对 session 有了一个大体的认识，但是具体到动态页面技术里面，又是怎么实现 session 的呢？下面我们将结合 session 的生命周期（lifecycle），来实现 go 语言版本的 session 管理。</p>
+<h3 id="session-管理设计"><a href="#session-管理设计" class="headerlink" title="session 管理设计"></a>session 管理设计</h3><p>我们知道 session 管理涉及到如下几个因素</p>
+<p>1.全局 session 管理器<br>2.保证 sessionid 的全局唯一性<br>3.为每个客户关联一个 session<br>4.session 的存储 (可以存储到内存、文件、数据库等)<br>5.session 过期处理<br>接下来我将讲解一下我关于 session 管理的整个设计思路以及相应的 go 代码示例：</p>
+<h3 id="Session-管理器"><a href="#Session-管理器" class="headerlink" title="Session 管理器"></a>Session 管理器</h3><p>定义一个全局的 session 管理器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Manager <span class="keyword">struct</span> &#123;</span><br><span class="line">    cookieName  <span class="type">string</span>     <span class="comment">// private cookiename</span></span><br><span class="line">    lock        sync.Mutex <span class="comment">// protects session</span></span><br><span class="line">    provider    Provider</span><br><span class="line">    maxLifeTime <span class="type">int64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewManager</span><span class="params">(provideName, cookieName <span class="type">string</span>, maxLifeTime <span class="type">int64</span>)</span></span> (*Manager, <span class="type">error</span>) &#123;</span><br><span class="line">    provider, ok := provides[provideName]</span><br><span class="line">    <span class="keyword">if</span> !ok &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;session: unknown provide %q (forgotten import?)&quot;</span>, provideName)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> &amp;Manager&#123;provider: provider, cookieName: cookieName, maxLifeTime: maxLifeTime&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Go 实现整个的流程应该也是这样的，在 main 包中创建一个全局的 session 管理器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> globalSessions *session.Manager</span><br><span class="line"><span class="comment">// 然后在 init 函数中初始化</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    globalSessions, _ = NewManager(<span class="string">&quot;memory&quot;</span>, <span class="string">&quot;gosessionid&quot;</span>, <span class="number">3600</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们知道 session 是保存在服务器端的数据，它可以以任何的方式存储，比如存储在内存、数据库或者文件中。因此我们抽象出一个 Provider 接口，用以表征 session 管理器底层存储结构。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Provider <span class="keyword">interface</span> &#123;</span><br><span class="line">    SessionInit(sid <span class="type">string</span>) (Session, <span class="type">error</span>)</span><br><span class="line">    SessionRead(sid <span class="type">string</span>) (Session, <span class="type">error</span>)</span><br><span class="line">    SessionDestroy(sid <span class="type">string</span>) <span class="type">error</span></span><br><span class="line">    SessionGC(maxLifeTime <span class="type">int64</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>SessionInit 函数实现 Session 的初始化，操作成功则返回此新的 Session 变量<br>SessionRead 函数返回 sid 所代表的 Session 变量，如果不存在，那么将以 sid 为参数调用 SessionInit 函数创建并返回一个新的 Session 变量<br>SessionDestroy 函数用来销毁 sid 对应的 Session 变量<br>SessionGC 根据 maxLifeTime 来删除过期的数据<br>那么 Session 接口需要实现什么样的功能呢？有过 Web 开发经验的读者知道，对 Session 的处理基本就设置值、读取值、删除值以及获取当前 sessionID 这四个操作，所以我们的 Session 接口也就实现这四个操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Session <span class="keyword">interface</span> &#123;</span><br><span class="line">    Set(key, value <span class="keyword">interface</span>&#123;&#125;) <span class="type">error</span> <span class="comment">// set session value</span></span><br><span class="line">    Get(key <span class="keyword">interface</span>&#123;&#125;) <span class="keyword">interface</span>&#123;&#125;  <span class="comment">// get session value</span></span><br><span class="line">    Delete(key <span class="keyword">interface</span>&#123;&#125;) <span class="type">error</span>     <span class="comment">// delete session value</span></span><br><span class="line">    SessionID() <span class="type">string</span>                <span class="comment">// back current sessionID</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> provides = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]Provider)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Register makes a session provide available by the provided name.</span></span><br><span class="line"><span class="comment">// If Register is called twice with the same name or if driver is nil,</span></span><br><span class="line"><span class="comment">// it panics.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Register</span><span class="params">(name <span class="type">string</span>, provider Provider)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> provider == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(<span class="string">&quot;session: Register provider is nil&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> _, dup := provides[name]; dup &#123;</span><br><span class="line">        <span class="built_in">panic</span>(<span class="string">&quot;session: Register called twice for provider &quot;</span> + name)</span><br><span class="line">    &#125;</span><br><span class="line">    provides[name] = provider</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="全局唯一的-Session-ID"><a href="#全局唯一的-Session-ID" class="headerlink" title="全局唯一的 Session ID"></a>全局唯一的 Session ID</h2><p>Session ID 是用来识别访问 Web 应用的每一个用户，因此必须保证它是全局唯一的（GUID），下面代码展示了如何满足这一需求：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(manager *Manager)</span></span> sessionId() <span class="type">string</span> &#123;</span><br><span class="line">    b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">32</span>)</span><br><span class="line">    <span class="keyword">if</span> _, err := rand.Read(b); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> base64.URLEncoding.EncodeToString(b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="session-创建"><a href="#session-创建" class="headerlink" title="session 创建"></a>session 创建</h2><p>我们需要为每个来访用户分配或获取与他相关连的 Session，以便后面根据 Session 信息来验证操作。SessionStart 这个函数就是用来检测是否已经有某个 Session 与当前来访用户发生了关联，如果没有则创建之。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(manager *Manager)</span></span> SessionStart(w http.ResponseWriter, r *http.Request) (session Session) &#123;</span><br><span class="line">    manager.lock.Lock()</span><br><span class="line">    <span class="keyword">defer</span> manager.lock.Unlock()</span><br><span class="line">    cookie, err := r.Cookie(manager.cookieName)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> || cookie.Value == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">        sid := manager.sessionId()</span><br><span class="line">        session, _ = manager.provider.SessionInit(sid)</span><br><span class="line">        cookie := http.Cookie&#123;Name: manager.cookieName, Value: url.QueryEscape(sid), Path: <span class="string">&quot;/&quot;</span>, HttpOnly: <span class="literal">true</span>, MaxAge: <span class="type">int</span>(manager.maxLifeTime)&#125;</span><br><span class="line">        http.SetCookie(w, &amp;cookie)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sid, _ := url.QueryUnescape(cookie.Value)</span><br><span class="line">        session, _ = manager.provider.SessionRead(sid)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们用前面 login 操作来演示 session 的运用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">login</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    sess := globalSessions.SessionStart(w, r)</span><br><span class="line">    r.ParseForm()</span><br><span class="line">    <span class="keyword">if</span> r.Method == <span class="string">&quot;GET&quot;</span> &#123;</span><br><span class="line">        t, _ := template.ParseFiles(<span class="string">&quot;login.gtpl&quot;</span>)</span><br><span class="line">        w.Header().Set(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/html&quot;</span>)</span><br><span class="line">        t.Execute(w, sess.Get(<span class="string">&quot;username&quot;</span>))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sess.Set(<span class="string">&quot;username&quot;</span>, r.Form[<span class="string">&quot;username&quot;</span>])</span><br><span class="line">        http.Redirect(w, r, <span class="string">&quot;/&quot;</span>, <span class="number">302</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="操作值：设置、读取和删除"><a href="#操作值：设置、读取和删除" class="headerlink" title="操作值：设置、读取和删除"></a>操作值：设置、读取和删除</h2><p>SessionStart 函数返回的是一个满足 Session 接口的变量，那么我们该如何用他来对 session 数据进行操作呢？</p>
+<p>上面的例子中的代码 session.Get(“uid”) 已经展示了基本的读取数据的操作，现在我们再来看一下详细的操作:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">count</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    sess := globalSessions.SessionStart(w, r)</span><br><span class="line">    createtime := sess.Get(<span class="string">&quot;createtime&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> createtime == <span class="literal">nil</span> &#123;</span><br><span class="line">        sess.Set(<span class="string">&quot;createtime&quot;</span>, time.Now().Unix())</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (createtime.(<span class="type">int64</span>) + <span class="number">360</span>) &lt; (time.Now().Unix()) &#123;</span><br><span class="line">        globalSessions.SessionDestroy(w, r)</span><br><span class="line">        sess = globalSessions.SessionStart(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">    ct := sess.Get(<span class="string">&quot;countnum&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> ct == <span class="literal">nil</span> &#123;</span><br><span class="line">        sess.Set(<span class="string">&quot;countnum&quot;</span>, <span class="number">1</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sess.Set(<span class="string">&quot;countnum&quot;</span>, (ct.(<span class="type">int</span>) + <span class="number">1</span>))</span><br><span class="line">    &#125;</span><br><span class="line">    t, _ := template.ParseFiles(<span class="string">&quot;count.gtpl&quot;</span>)</span><br><span class="line">    w.Header().Set(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;text/html&quot;</span>)</span><br><span class="line">    t.Execute(w, sess.Get(<span class="string">&quot;countnum&quot;</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的例子可以看到，Session 的操作和操作 key&#x2F;value 数据库类似: Set、Get、Delete 等操作</p>
+<p>因为 Session 有过期的概念，所以我们定义了 GC 操作，当访问过期时间满足 GC 的触发条件后将会引起 GC，但是当我们进行了任意一个 session 操作，都会对 Session 实体进行更新，都会触发对最后访问时间的修改，这样当 GC 的时候就不会误删除还在使用的 Session 实体。</p>
+<h2 id="session-重置"><a href="#session-重置" class="headerlink" title="session 重置"></a>session 重置</h2><p>我们知道，Web 应用中有用户退出这个操作，那么当用户退出应用的时候，我们需要对该用户的 session 数据进行销毁操作，上面的代码已经演示了如何使用 session 重置操作，下面这个函数就是实现了这个功能：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Destroy sessionid</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(manager *Manager)</span></span> SessionDestroy(w http.ResponseWriter, r *http.Request)&#123;</span><br><span class="line">    cookie, err := r.Cookie(manager.cookieName)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> || cookie.Value == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        manager.lock.Lock()</span><br><span class="line">        <span class="keyword">defer</span> manager.lock.Unlock()</span><br><span class="line">        manager.provider.SessionDestroy(cookie.Value)</span><br><span class="line">        expiration := time.Now()</span><br><span class="line">        cookie := http.Cookie&#123;Name: manager.cookieName, Path: <span class="string">&quot;/&quot;</span>, HttpOnly: <span class="literal">true</span>, Expires: expiration, MaxAge: <span class="number">-1</span>&#125;</span><br><span class="line">        http.SetCookie(w, &amp;cookie)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="session-销毁"><a href="#session-销毁" class="headerlink" title="session 销毁"></a>session 销毁</h2><p>我们来看一下 Session 管理器如何来管理销毁，只要我们在 Main 启动的时候启动：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">go</span> globalSessions.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(manager *Manager)</span></span> GC() &#123;</span><br><span class="line">    manager.lock.Lock()</span><br><span class="line">    <span class="keyword">defer</span> manager.lock.Unlock()</span><br><span class="line">    manager.provider.SessionGC(manager.maxLifeTime)</span><br><span class="line">    time.AfterFunc(time.Duration(manager.maxLifeTime), <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; manager.GC() &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 GC 充分利用了 time 包中的定时器功能，当超时 maxLifeTime 之后调用 GC 函数，这样就可以保证 maxLifeTime 时间内的 session 都是可用的，类似的方案也可以用于统计在线用户数之类的。</p>
+<p>转载文章 ：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/065-summary/3193">06.5. 小结 | 第六章. session 和数据存储 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/19/11-%E4%BD%BF%E7%94%A8mysql%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="prev" title="11.使用mysql数据库">
+      <i class="fa fa-chevron-left"></i> 11.使用mysql数据库
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Go-%E8%AE%BE%E7%BD%AE-cookie"><span class="nav-number">1.</span> <span class="nav-text">Go 设置 cookie</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Go-%E8%AF%BB%E5%8F%96-cookie"><span class="nav-number">2.</span> <span class="nav-text">Go 读取 cookie</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Go-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-session"><span class="nav-number">3.</span> <span class="nav-text">Go 如何使用 session</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#session-%E5%88%9B%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-number">3.1.</span> <span class="nav-text">session 创建过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Go-%E5%AE%9E%E7%8E%B0-session-%E7%AE%A1%E7%90%86"><span class="nav-number">3.2.</span> <span class="nav-text">Go 实现 session 管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#session-%E7%AE%A1%E7%90%86%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.1.</span> <span class="nav-text">session 管理设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Session-%E7%AE%A1%E7%90%86%E5%99%A8"><span class="nav-number">3.2.2.</span> <span class="nav-text">Session 管理器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%94%AF%E4%B8%80%E7%9A%84-Session-ID"><span class="nav-number">3.3.</span> <span class="nav-text">全局唯一的 Session ID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session-%E5%88%9B%E5%BB%BA"><span class="nav-number">3.4.</span> <span class="nav-text">session 创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E5%80%BC%EF%BC%9A%E8%AE%BE%E7%BD%AE%E3%80%81%E8%AF%BB%E5%8F%96%E5%92%8C%E5%88%A0%E9%99%A4"><span class="nav-number">3.5.</span> <span class="nav-text">操作值：设置、读取和删除</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session-%E9%87%8D%E7%BD%AE"><span class="nav-number">3.6.</span> <span class="nav-text">session 重置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session-%E9%94%80%E6%AF%81"><span class="nav-number">3.7.</span> <span class="nav-text">session 销毁</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

