@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"2324152038.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"livere","storage":true,"lazyload":false,"nav":null,"activeClass":"livere"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="XML 处理ML 作为一种数据交换和信息传递的格式已经十分普及。而随着 Web 服务日益广泛的应用，现在 XML 在日常的开发工作中也扮演了愈发重要的角色。这一小节， 我们将就 Go 语言标准包中的 XML 相关处理的包进行介绍。 这个小节不会涉及 XML 规范相关的内容（如需了解相关知识请参考其他文献），而是介绍如何用 Go 语言来编解码 XML 文件相关的知识。 假如你是一名运维人员，你为你所">
+<meta property="og:type" content="article">
+<meta property="og:title" content="13.xml和json文本处理">
+<meta property="og:url" content="http://2324152038.github.io/2022/09/22/13-xml%E5%92%8Cjson%E6%96%87%E6%9C%AC%E5%A4%84%E7%90%86/index.html">
+<meta property="og:site_name" content="RISE">
+<meta property="og:description" content="XML 处理ML 作为一种数据交换和信息传递的格式已经十分普及。而随着 Web 服务日益广泛的应用，现在 XML 在日常的开发工作中也扮演了愈发重要的角色。这一小节， 我们将就 Go 语言标准包中的 XML 相关处理的包进行介绍。 这个小节不会涉及 XML 规范相关的内容（如需了解相关知识请参考其他文献），而是介绍如何用 Go 语言来编解码 XML 文件相关的知识。 假如你是一名运维人员，你为你所">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-22T05:16:41.000Z">
+<meta property="article:modified_time" content="2022-09-22T05:51:23.924Z">
+<meta property="article:author" content="春去春来">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://2324152038.github.io/2022/09/22/13-xml%E5%92%8Cjson%E6%96%87%E6%9C%AC%E5%A4%84%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>13.xml和json文本处理 | RISE</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">RISE</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-images">
+
+    <a href="/images/" rel="section"><i class="fa fa-tags fa-fw"></i>图片</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://2324152038.github.io/2022/09/22/13-xml%E5%92%8Cjson%E6%96%87%E6%9C%AC%E5%A4%84%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+      <meta itemprop="name" content="春去春来">
+      <meta itemprop="description" content="登峰造极境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="RISE">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          13.xml和json文本处理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-09-22 13:16:41 / 修改时间：13:51:23" itemprop="dateCreated datePublished" datetime="2022-09-22T13:16:41+08:00">2022-09-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go-web-%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">Go web 编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="XML-处理"><a href="#XML-处理" class="headerlink" title="XML 处理"></a>XML 处理</h1><p>ML 作为一种数据交换和信息传递的格式已经十分普及。而随着 Web 服务日益广泛的应用，现在 XML 在日常的开发工作中也扮演了愈发重要的角色。这一小节， 我们将就 Go 语言标准包中的 XML 相关处理的包进行介绍。</p>
+<p>这个小节不会涉及 XML 规范相关的内容（如需了解相关知识请参考其他文献），而是介绍如何用 Go 语言来编解码 XML 文件相关的知识。</p>
+<p>假如你是一名运维人员，你为你所管理的所有服务器生成了如下内容的 xml 的配置文件：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;utf-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">servers</span> <span class="attr">version</span>=<span class="string">&quot;1&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">server</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">serverName</span>&gt;</span>Shanghai_VPN<span class="tag">&lt;/<span class="name">serverName</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">serverIP</span>&gt;</span>127.0.0.1<span class="tag">&lt;/<span class="name">serverIP</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">server</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">server</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">serverName</span>&gt;</span>Beijing_VPN<span class="tag">&lt;/<span class="name">serverName</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">serverIP</span>&gt;</span>127.0.0.2<span class="tag">&lt;/<span class="name">serverIP</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">server</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">servers</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的 XML 文档描述了两个服务器的信息，包含了服务器名和服务器的 IP 信息，接下来的 Go 例子以此 XML 描述的信息进行操作。</p>
+<h2 id="解析-XML"><a href="#解析-XML" class="headerlink" title="解析 XML"></a>解析 XML</h2><p>何解析如上这个 XML 文件呢？ 我们可以通过 xml 包的 <code>Unmarshal</code> 函数来达到我们的目的</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Unmarshal</span><span class="params">(data []<span class="type">byte</span>, v <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">error</span></span><br></pre></td></tr></table></figure>
+
+<p>data 接收的是 XML 数据流，v 是需要输出的结构，定义为 interface，也就是可以把 XML 转换为任意的格式。我们这里主要介绍 struct 的转换，因为 struct 和 XML 都有类似树结构的特征。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;encoding/xml&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;io/ioutil&quot;</span></span><br><span class="line">    <span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Recurlyservers <span class="keyword">struct</span> &#123;</span><br><span class="line">    XMLName     xml.Name <span class="string">`xml:&quot;servers&quot;`</span></span><br><span class="line">    Version     <span class="type">string</span>   <span class="string">`xml:&quot;version,attr&quot;`</span></span><br><span class="line">    Svs         []server <span class="string">`xml:&quot;server&quot;`</span></span><br><span class="line">    Description <span class="type">string</span>   <span class="string">`xml:&quot;,innerxml&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> server <span class="keyword">struct</span> &#123;</span><br><span class="line">    XMLName    xml.Name <span class="string">`xml:&quot;server&quot;`</span></span><br><span class="line">    ServerName <span class="type">string</span>   <span class="string">`xml:&quot;serverName&quot;`</span></span><br><span class="line">    ServerIP   <span class="type">string</span>   <span class="string">`xml:&quot;serverIP&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    file, err := os.Open(<span class="string">&quot;servers.xml&quot;</span>) <span class="comment">// For read access.     </span></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;error: %v&quot;</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> file.Close()</span><br><span class="line">    data, err := ioutil.ReadAll(file)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;error: %v&quot;</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    v := Recurlyservers&#123;&#125;</span><br><span class="line">    err = xml.Unmarshal(data, &amp;v)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;error: %v&quot;</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fmt.Println(v)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>XML 本质上是一种树形的数据格式，而我们可以定义与之匹配的 go 语言的 struct 类型，然后通过 xml.Unmarshal 来将 xml 中的数据解析成对应的 struct 对象。如上例子输出如下数据</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; servers&#125; <span class="number">1</span> [&#123;&#123; server&#125; Shanghai_VPN <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>&#125; &#123;&#123; server&#125; Beijing_VPN <span class="number">127.0</span><span class="number">.0</span><span class="number">.2</span>&#125;]</span><br><span class="line">&lt;server&gt;</span><br><span class="line">    &lt;serverName&gt;Shanghai_VPN&lt;/serverName&gt;</span><br><span class="line">    &lt;serverIP&gt;<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>&lt;/serverIP&gt;</span><br><span class="line">&lt;/server&gt;</span><br><span class="line">&lt;server&gt;</span><br><span class="line">    &lt;serverName&gt;Beijing_VPN&lt;/serverName&gt;</span><br><span class="line">    &lt;serverIP&gt;<span class="number">127.0</span><span class="number">.0</span><span class="number">.2</span>&lt;/serverIP&gt;</span><br><span class="line">&lt;/server&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的例子中，将 xml 文件解析成对应的 struct 对象是通过 xml.Unmarshal 来完成的，这个过程是如何实现的？可以看到我们的 struct 定义后面多了一些类似于 xml:”serverName” 这样的内容，这个是 struct 的一个特性，它们被称为 struct tag，它们是用来辅助反射的。我们来看一下 Unmarshal 的定义：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Unmarshal</span><span class="params">(data []<span class="type">byte</span>, v <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">error</span></span><br></pre></td></tr></table></figure>
+
+<p>我们看到函数定义了两个参数，第一个是 XML 数据流，第二个是存储的对应类型，目前支持 struct、slice 和 string，XML 包内部采用了反射来进行数据的映射，所以 v 里面的字段必须是导出的。Unmarshal 解析的时候 XML 元素和字段怎么对应起来的呢？这是有一个优先级读取流程的，首先会读取 struct tag，如果没有，那么就会对应字段名。必须注意一点的是解析的时候 tag、字段名、XML 元素都是大小写敏感的，所以必须一一对应字段。</p>
+<p>Go 语言的反射机制，可以利用这些 tag 信息来将来自 XML 文件中的数据反射成对应的 struct 对象，关于反射如何利用 struct tag 的更多内容请参阅 reflect 中的相关内容。</p>
+<p>解析 XML 到 struct 的时候遵循如下的规则：</p>
+<p>1.如果 struct 的一个字段是 string 或者 [] byte 类型且它的 tag 含有 “,innerxml”，Unmarshal 将会将此字段所对应的元素内所有内嵌的原始 xml 累加到此字段上，如上面例子 Description 定义。</p>
+<p>2.如果 struct 中有一个叫做 XMLName，且类型为 xml.Name 字段，那么在解析的时候就会保存这个 element 的名字到该字段，如上面例子中的 servers。</p>
+<p>3.如果某个 struct 字段的 tag 定义中含有 XML 结构中 element 的名称，那么解析的时候就会把相应的 </p>
+<p>element 值赋值给该字段，如上 servername 和 serverip 定义。<br>4.如果某个 struct 字段的 tag 定义了中含有 “,attr”，那么解析的时候就会将该结构所对应的 element 的与字段同名的属性的值赋值给该字段，如上 version 定义。</p>
+<p>5.如果某个 struct 字段的 tag 定义 型如 “a&gt;b&gt;c”, 则解析的时候，会将 xml 结构 a 下面的 b 下面的 c 元素的值赋值给该字段。</p>
+<p>6.如果某个 struct 字段的 tag 定义了 “-“, 那么不会为该字段解析匹配任何 xml 数据。</p>
+<p>7.如果 struct 字段后面的 tag 定义了 “,any”，如果他的子元素在不满足其他的规则的时候就会匹配到这个字段。</p>
+<p>8.如果某个 XML 元素包含一条或者多条注释，那么这些注释将被累加到第一个 tag 含有 “,comments” 的字段上，这个字段的类型可能是 [] byte 或 string, 如果没有这样的字段存在，那么注释将会被抛弃。</p>
+<p>上面详细讲述了如何定义 struct 的 tag。 只要设置对了 tag，那么 XML 解析就如上面示例般简单，tag 和 XML 的 element 是一一对应的关系，如上所示，我们还可以通过 slice 来表示多个同级元素。</p>
+<h2 id="输出-XML"><a href="#输出-XML" class="headerlink" title="输出 XML"></a>输出 XML</h2><p>假若我们不是要解析如上所示的 XML 文件，而是生成它，那么在 go 语言中又该如何实现呢？ xml 包中提供了 Marshal 和 MarshalIndent 两个函数，来满足我们的需求。这两个函数主要的区别是第二个函数会增加前缀和缩进，函数的定义如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Marshal</span><span class="params">(v <span class="keyword">interface</span>&#123;&#125;)</span></span> ([]<span class="type">byte</span>, <span class="type">error</span>)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MarshalIndent</span><span class="params">(v <span class="keyword">interface</span>&#123;&#125;, prefix, indent <span class="type">string</span>)</span></span> ([]<span class="type">byte</span>, <span class="type">error</span>)</span><br></pre></td></tr></table></figure>
+
+<p>两个函数第一个参数是用来生成 XML 的结构定义类型数据，都是返回生成的 XML 数据流。</p>
+<p>下面我们来看一下如何输出如上的 XML：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;encoding/xml&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;os&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Servers <span class="keyword">struct</span> &#123;</span><br><span class="line">    XMLName xml.Name <span class="string">`xml:&quot;servers&quot;`</span></span><br><span class="line">    Version <span class="type">string</span>   <span class="string">`xml:&quot;version,attr&quot;`</span></span><br><span class="line">    Svs     []server <span class="string">`xml:&quot;server&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> server <span class="keyword">struct</span> &#123;</span><br><span class="line">    ServerName <span class="type">string</span> <span class="string">`xml:&quot;serverName&quot;`</span></span><br><span class="line">    ServerIP   <span class="type">string</span> <span class="string">`xml:&quot;serverIP&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    v := &amp;Servers&#123;Version: <span class="string">&quot;1&quot;</span>&#125;</span><br><span class="line">    v.Svs = <span class="built_in">append</span>(v.Svs, server&#123;<span class="string">&quot;Shanghai_VPN&quot;</span>, <span class="string">&quot;127.0.0.1&quot;</span>&#125;)</span><br><span class="line">    v.Svs = <span class="built_in">append</span>(v.Svs, server&#123;<span class="string">&quot;Beijing_VPN&quot;</span>, <span class="string">&quot;127.0.0.2&quot;</span>&#125;)</span><br><span class="line">    output, err := xml.MarshalIndent(v, <span class="string">&quot;  &quot;</span>, <span class="string">&quot;    &quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;error: %v\n&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    os.Stdout.Write([]<span class="type">byte</span>(xml.Header))</span><br><span class="line"></span><br><span class="line">    os.Stdout.Write(output)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码输出如下信息：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">servers</span> <span class="attr">version</span>=<span class="string">&quot;1&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">server</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">serverName</span>&gt;</span>Shanghai_VPN<span class="tag">&lt;/<span class="name">serverName</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">serverIP</span>&gt;</span>127.0.0.1<span class="tag">&lt;/<span class="name">serverIP</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">server</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">server</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">serverName</span>&gt;</span>Beijing_VPN<span class="tag">&lt;/<span class="name">serverName</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">serverIP</span>&gt;</span>127.0.0.2<span class="tag">&lt;/<span class="name">serverIP</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">server</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">servers</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>和我们之前定义的文件的格式一模一样，之所以会有 os.Stdout.Write([]byte(xml.Header)) 这句代码的出现，是因为 xml.MarshalIndent 或者 xml.Marshal 输出的信息都是不带 XML 头的，为了生成正确的 xml 文件，我们使用了 xml 包预定义的 Header 变量。</p>
+<p>我们看到 Marshal 函数接收的参数 v 是 interface {} 类型的，即它可以接受任意类型的参数，那么 xml 包，根据什么规则来生成相应的 XML 文件呢？</p>
+<p>如果 v 是 array 或者 slice，那么输出每一个元素，类似 value<br>如果 v 是指针，那么会 Marshal 指针指向的内容，如果指针为空，什么都不输出<br>如果 v 是 interface，那么就处理 interface 所包含的数据<br>如果 v 是其他数据类型，就会输出这个数据类型所拥有的字段信息<br>生成的 XML 文件中的 element 的名字又是根据什么决定的呢？元素名按照如下优先级从 struct 中获取：</p>
+<p>如果 v 是 struct，XMLName 的 tag 中定义的名称<br>类型为 xml.Name 的名叫 XMLName 的字段的值<br>通过 struct 中字段的 tag 来获取<br>通过 struct 的字段名用来获取<br>marshall 的类型名称<br>我们应如何设置 struct 中字段的 tag 信息以控制最终 xml 文件的生成呢？</p>
+<p>1.XMLName 不会被输出</p>
+<p>2.tag 中含有 “-“ 的字段不会输出</p>
+<p>3.tag 中含有  “name,attr”，会以 name 作为属性名，字段值作为值输出为这个 XML 元素的属性，如上 version 字段所描述</p>
+<p>4.tag 中含有 “,attr”，会以这个 struct 的字段名作为属性名输出为 XML 元素的属性，类似上一条，只是这个 name 默认是字段名了。</p>
+<p>5.tag 中含有 “,chardata”，输出为 xml 的 character data 而非 element。</p>
+<p>6.tag 中含有 “,innerxml”，将会被原样输出，而不会进行常规的编码过程</p>
+<p>7.tag 中含有 “,comment”，将被当作 xml 注释来输出，而不会进行常规的编码过程，字段值中不能含有 “–” 字符串</p>
+<p>8.tag 中含有 “omitempty”, 如果该字段的值为空值那么该字段就不会被输出到 XML，空值包括：false、0、nil 指针或 nil 接口，任何长度为 0 的 array, slice, map 或者 string</p>
+<p>9.tag 中含有 “a&gt;b&gt;c”，那么就会循环输出三个元素 a 包含 b，b 包含 c，例如如下代码就会输出</p>
+<h1 id="JSON-处理"><a href="#JSON-处理" class="headerlink" title="JSON 处理"></a>JSON 处理</h1><p>JSON（Javascript Object Notation）是一种轻量级的数据交换语言，以文字为基础，具有自我描述性且易于让人阅读。尽管 JSON 是 Javascript 的一个子集，但 JSON 是独立于语言的文本格式，并且采用了类似于 C 语言家族的一些习惯。JSON 与 XML 最大的不同在于 XML 是一个完整的标记语言，而 JSON 不是。JSON 由于比 XML 更小、更快，更易解析，以及浏览器的内建快速解析支持，使得其更适用于网络数据传输领域。目前我们看到很多的开放平台，基本上都是采用了 JSON 作为他们的数据交互的接口。既然 JSON 在 Web 开发中如此重要，那么 Go 语言对 JSON 支持的怎么样呢？Go 语言的标准库已经非常好的支持了 JSON，可以很容易的对 JSON 数据进行编、解码的工作。</p>
+<p>前一小节的运维的例子用 json 来表示，结果描述如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;servers&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;serverName&quot;: &quot;Shanghai_VPN&quot;, </span><br><span class="line">            &quot;serverIP&quot;: &quot;127.0.0.1&quot;</span><br><span class="line">        &#125;, </span><br><span class="line">        &#123;</span><br><span class="line">            &quot;serverName&quot;: &quot;Beijing_VPN&quot;, </span><br><span class="line">            &quot;serverIP&quot;: &quot;127.0.0.2&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本小节余下的内容将以此 JSON 数据为基础，来介绍 go 语言的 json 包对 JSON 数据的编、解码。</p>
+<h2 id="解析到结构体"><a href="#解析到结构体" class="headerlink" title="解析到结构体"></a>解析到结构体</h2><p>假如有了上面的 JSON 串，那么我们如何来解析这个 JSON 串呢？Go 的 JSON 包中有如下函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">func Unmarshal(data []byte, v interface&#123;&#125;) error</span><br></pre></td></tr></table></figure>
+
+<p>过这个函数我们就可以实现解析的目的，详细的解析例子请看如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    ServerName <span class="type">string</span></span><br><span class="line">    ServerIP   <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Serverslice <span class="keyword">struct</span> &#123;</span><br><span class="line">    Servers []Server</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> s Serverslice</span><br><span class="line">    str := <span class="string">`&#123;&quot;servers&quot;:[&#123;&quot;serverName&quot;:&quot;Shanghai_VPN&quot;,&quot;serverIP&quot;:&quot;127.0.0.1&quot;&#125;,&#123;&quot;serverName&quot;:&quot;Beijing_VPN&quot;,&quot;serverIP&quot;:&quot;127.0.0.2&quot;&#125;]&#125;`</span></span><br><span class="line">    json.Unmarshal([]<span class="type">byte</span>(str), &amp;s)</span><br><span class="line">    fmt.Println(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上面的示例代码中，我们首先定义了与 json 数据对应的结构体，数组对应 slice，字段名对应 JSON 里面的 KEY，在解析的时候，如何将 json 数据与 struct 字段相匹配呢？例如 JSON 的 key 是 Foo，那么怎么找对应的字段呢？</p>
+<p>首先查找 tag 含有 Foo 的可导出的 struct 字段 (首字母大写)<br>其次查找字段名是 Foo 的导出字段<br>最后查找类似 FOO 或者 FoO 这样的除了首字母之外其他大小写不敏感的导出字段<br>聪明的你一定注意到了这一点：能够被赋值的字段必须是可导出字段 (即首字母大写）。同时 JSON 解析的时候只会解析能找得到的字段，找不到的字段会被忽略，这样的一个好处是：当你接收到一个很大的 JSON 数据结构而你却只想获取其中的部分数据的时候，你只需将你想要的数据对应的字段名大写，即可轻松解决这个问题。</p>
+<h2 id="解析到-interface"><a href="#解析到-interface" class="headerlink" title="解析到 interface"></a>解析到 interface</h2><p>上面那种解析方式是在我们知晓被解析的 JSON 数据的结构的前提下采取的方案，如果我们不知道被解析的数据的格式，又应该如何来解析呢？</p>
+<p>我们知道 interface {} 可以用来存储任意数据类型的对象，这种数据结构正好用于存储解析的未知结构的 json 数据的结果。JSON 包中采用 map [string] interface {} 和 [] interface {} 结构来存储任意的 JSON 对象和数组。Go 类型和 JSON 类型的对应关系如下：</p>
+<p>bool 代表 JSON booleans,<br>float64 代表 JSON numbers,<br>string 代表 JSON strings,<br>nil 代表 JSON null.<br>现在我们假设有如下的 JSON 数据</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">b := []<span class="type">byte</span>(<span class="string">`&#123;&quot;Name&quot;:&quot;Wednesday&quot;,&quot;Age&quot;:6,&quot;Parents&quot;:[&quot;Gomez&quot;,&quot;Morticia&quot;]&#125;`</span>)</span><br></pre></td></tr></table></figure>
+
+<p>如果在我们不知道他的结构的情况下，我们把他解析到 interface {} 里面</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> f <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">err := json.Unmarshal(b, &amp;f)</span><br></pre></td></tr></table></figure>
+
+<p>这个时候 f 里面存储了一个 map 类型，他们的 key 是 string，值存储在空的 interface {} 里</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">f = <span class="keyword">map</span>[<span class="type">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;</span><br><span class="line">    <span class="string">&quot;Name&quot;</span>: <span class="string">&quot;Wednesday&quot;</span>,</span><br><span class="line">    <span class="string">&quot;Age&quot;</span>:  <span class="number">6</span>,</span><br><span class="line">    <span class="string">&quot;Parents&quot;</span>: []<span class="keyword">interface</span>&#123;&#125;&#123;</span><br><span class="line">        <span class="string">&quot;Gomez&quot;</span>,</span><br><span class="line">        <span class="string">&quot;Morticia&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么如何来访问这些数据呢？通过断言的方式：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">m := f.(<span class="keyword">map</span>[<span class="type">string</span>]<span class="keyword">interface</span>&#123;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>通过断言之后，你就可以通过如下方式来访问里面的数据了</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> k, v := <span class="keyword">range</span> m &#123;</span><br><span class="line">    <span class="keyword">switch</span> vv := v.(<span class="keyword">type</span>) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="type">string</span>:</span><br><span class="line">        fmt.Println(k, <span class="string">&quot;is string&quot;</span>, vv)</span><br><span class="line">    <span class="keyword">case</span> <span class="type">int</span>:</span><br><span class="line">        fmt.Println(k, <span class="string">&quot;is int&quot;</span>, vv)</span><br><span class="line">    <span class="keyword">case</span> <span class="type">float64</span>:</span><br><span class="line">        fmt.Println(k,<span class="string">&quot;is float64&quot;</span>,vv)</span><br><span class="line">    <span class="keyword">case</span> []<span class="keyword">interface</span>&#123;&#125;:</span><br><span class="line">        fmt.Println(k, <span class="string">&quot;is an array:&quot;</span>)</span><br><span class="line">        <span class="keyword">for</span> i, u := <span class="keyword">range</span> vv &#123;</span><br><span class="line">            fmt.Println(i, u)</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        fmt.Println(k, <span class="string">&quot;is of a type I don&#x27;t know how to handle&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的示例可以看到，通过 interface {} 与 type assert 的配合，我们就可以解析未知结构的 JSON 数了。</p>
+<h2 id="生成-JSON"><a href="#生成-JSON" class="headerlink" title="生成 JSON"></a>生成 JSON</h2><p>我们开发很多应用的时候，最后都是要输出 JSON 数据串，那么如何来处理呢？JSON 包里面通过 <code>Marshal</code> 函数来处理，函数定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">func Marshal(v interface&#123;&#125;) ([]byte, error)</span><br></pre></td></tr></table></figure>
+
+<p>假设我们还是需要生成上面的服务器列表信息，那么如何来处理呢？请看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    ServerName <span class="type">string</span></span><br><span class="line">    ServerIP   <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Serverslice <span class="keyword">struct</span> &#123;</span><br><span class="line">    Servers []Server</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> s Serverslice</span><br><span class="line">    s.Servers = <span class="built_in">append</span>(s.Servers, Server&#123;ServerName: <span class="string">&quot;Shanghai_VPN&quot;</span>, ServerIP: <span class="string">&quot;127.0.0.1&quot;</span>&#125;)</span><br><span class="line">    s.Servers = <span class="built_in">append</span>(s.Servers, Server&#123;ServerName: <span class="string">&quot;Beijing_VPN&quot;</span>, ServerIP: <span class="string">&quot;127.0.0.2&quot;</span>&#125;)</span><br><span class="line">    b, err := json.Marshal(s)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;json err:&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="type">string</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出如下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Servers&quot;:[&#123;&quot;ServerName&quot;:&quot;Shanghai_VPN&quot;,&quot;ServerIP&quot;:&quot;127.0.0.1&quot;&#125;,&#123;&quot;ServerName&quot;:&quot;Beijing_VPN&quot;,&quot;ServerIP&quot;:&quot;127.0.0.2&quot;&#125;]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看到上面的输出字段名的首字母都是大写的，如果你想用小写的首字母怎么办呢？把结构体的字段名改成首字母小写的？JSON 输出的时候必须注意，只有导出的字段才会被输出，如果修改字段名，那么就会发现什么都不会输出，所以必须通过 struct tag 定义来实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    ServerName <span class="type">string</span> <span class="string">`json:&quot;serverName&quot;`</span></span><br><span class="line">    ServerIP   <span class="type">string</span> <span class="string">`json:&quot;serverIP&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Serverslice <span class="keyword">struct</span> &#123;</span><br><span class="line">    Servers []Server <span class="string">`json:&quot;servers&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过修改上面的结构体定义，输出的 JSON 串就和我们最开始定义的 JSON 串保持一致了。</p>
+<p>针对 JSON 的输出，我们在定义 struct tag 的时候需要注意的几点是:</p>
+<p>字段的 tag 是 “-“，那么这个字段不会输出到 JSON<br>tag 中带有自定义名称，那么这个自定义名称会出现在 JSON 的字段名中，例如上面例子中 serverName<br>tag 中如果带有 “omitempty” 选项，那么如果该字段值为空，就不会输出到 JSON 串中<br>如果字段类型是 bool, string, int, int64 等，而 tag 中带有 “,string” 选项，那么这个字段在输出到 JSON 的时候会把该字段对应的值转换成 JSON 字符串</p>
+<p>举例来说：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ID 不会导出到 JSON 中</span></span><br><span class="line">    ID <span class="type">int</span> <span class="string">`json:&quot;-&quot;`</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ServerName2 的值会进行二次 JSON 编码</span></span><br><span class="line">    ServerName  <span class="type">string</span> <span class="string">`json:&quot;serverName&quot;`</span></span><br><span class="line">    ServerName2 <span class="type">string</span> <span class="string">`json:&quot;serverName2,string&quot;`</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果 ServerIP 为空，则不输出到 JSON 串中</span></span><br><span class="line">    ServerIP   <span class="type">string</span> <span class="string">`json:&quot;serverIP,omitempty&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">s := Server &#123;</span><br><span class="line">    ID:         <span class="number">3</span>,</span><br><span class="line">    ServerName:  <span class="string">`Go &quot;1.0&quot; `</span>,</span><br><span class="line">    ServerName2: <span class="string">`Go &quot;1.0&quot; `</span>,</span><br><span class="line">    ServerIP:   <span class="string">``</span>,</span><br><span class="line">&#125;</span><br><span class="line">b, _ := json.Marshal(s)</span><br><span class="line">os.Stdout.Write(b)</span><br></pre></td></tr></table></figure>
+
+<p>会输出以下内容：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;serverName&quot;</span><span class="punctuation">:</span><span class="string">&quot;Go \&quot;1.0\&quot; &quot;</span><span class="punctuation">,</span><span class="attr">&quot;serverName2&quot;</span><span class="punctuation">:</span><span class="string">&quot;\&quot;Go \\\&quot;1.0\\\&quot; \&quot;&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Marshal 函数只有在转换成功的时候才会返回数据，在转换的过程中我们需要注意几点：</p>
+<p>1.JSON 对象只支持 string 作为 key，所以要编码一个 map，那么必须是 map [string] T 这种类型 (T 是 Go 语言中任意的类型)</p>
+<p>2.Channel, complex 和 function 是不能被编码成 JSON 的</p>
+<p>3.嵌套的数据是不能编码的，不然会让 JSON 编码进入死循环</p>
+<p>4.指针在编码的时候会输出指针指向的内容，而空指针会输出 null</p>
+<p>转载文章：<a target="_blank" rel="noopener" href="https://learnku.com/docs/build-web-application-with-golang/072-json-processing/3196">07.2. JSON 处理 | 第七章. 文本处理 |《Go Web 编程》| Go 技术论坛 (learnku.com)</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/20/12-go%E4%BD%BF%E7%94%A8session%E5%92%8Ccookie/" rel="prev" title="12.go使用session和cookie">
+      <i class="fa fa-chevron-left"></i> 12.go使用session和cookie
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/27/14-socket%E7%BC%96%E7%A8%8B/" rel="next" title="14.socket编程">
+      14.socket编程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81NzE0Mi8zMzYwNg=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#XML-%E5%A4%84%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">XML 处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90-XML"><span class="nav-number">1.1.</span> <span class="nav-text">解析 XML</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%87%BA-XML"><span class="nav-number">1.2.</span> <span class="nav-text">输出 XML</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JSON-%E5%A4%84%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">JSON 处理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E5%88%B0%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">2.1.</span> <span class="nav-text">解析到结构体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E5%88%B0-interface"><span class="nav-number">2.2.</span> <span class="nav-text">解析到 interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90-JSON"><span class="nav-number">2.3.</span> <span class="nav-text">生成 JSON</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="春去春来"
+      src="https://chunquchunlai.oss-cn-chengdu.aliyuncs.com/3705DE5E0A790DFCC780E4AD61EFC4A6.jpg">
+  <p class="site-author-name" itemprop="name">春去春来</p>
+  <div class="site-description" itemprop="description">登峰造极境</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; Sat Aug 27 2022 08:00:00 GMT+0800 (中国标准时间) – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">春去春来</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
